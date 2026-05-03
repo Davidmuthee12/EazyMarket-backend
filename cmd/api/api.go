@@ -57,16 +57,11 @@ type tokenConfig struct {
 
 type mailConfig struct {
 	sendGrid  sendGridConfig
-	mailTrap  mailTrapConfig
 	fromEmail string
 	exp       time.Duration
 }
 
 type sendGridConfig struct {
-	apiKey string
-}
-
-type mailTrapConfig struct {
 	apiKey string
 }
 
