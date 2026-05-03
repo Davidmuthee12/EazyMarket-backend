@@ -65,6 +65,8 @@ func main() {
 	logger := zap.Must(zap.NewProduction()).Sugar()
 	defer logger.Sync()
 
+	logger.Infow("Starting EazyMarket API", "version", version)
+
 	// DB
 	db, err := db.New(
 		cfg.db.addr,
