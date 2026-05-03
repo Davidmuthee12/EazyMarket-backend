@@ -10,6 +10,7 @@ func (app *application) internalServerError(w http.ResponseWriter, r *http.Reque
 	writeJSONError(w, http.StatusInternalServerError, "The server encountered a problem")
 }
 
+//lint:ignore U1000 reserved for future route handlers
 func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request) {
 	app.logger.Warnw("forbidden", "method", r.Method, "path", r.URL.Path, "error")
 
@@ -22,12 +23,14 @@ func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Reques
 	writeJSONError(w, http.StatusBadRequest, err.Error())
 }
 
+//lint:ignore U1000 reserved for future route handlers
 func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Warnf("Not found error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
 	writeJSONError(w, http.StatusNotFound, "resource not found")
 }
 
+//lint:ignore U1000 reserved for future route handlers
 func (app *application) conflictResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Errorf("Conflict Response", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
@@ -40,6 +43,7 @@ func (app *application) unauthorizedErrorResponse(w http.ResponseWriter, r *http
 	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 }
 
+//lint:ignore U1000 reserved for future route handlers
 func (app *application) unauthorizedBasicErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Errorf("unauthorized Basic error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
@@ -48,6 +52,7 @@ func (app *application) unauthorizedBasicErrorResponse(w http.ResponseWriter, r 
 	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 }
 
+//lint:ignore U1000 reserved for future route handlers
 func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request, retryAfter string) {
 	app.logger.Warnw("rate limit exceeded", "method", r.Method, "path", r.URL.Path)
 
