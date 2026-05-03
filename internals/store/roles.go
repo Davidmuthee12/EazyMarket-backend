@@ -10,5 +10,6 @@ type Role struct {
 }
 
 type RoleStore struct {
+	//lint:ignore U1000 will be used when role queries are implemented
 	db *sql.DB
 }
