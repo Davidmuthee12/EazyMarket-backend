@@ -1,0 +1,65 @@
+name: Update API Version
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - CHANGELOG.md
+
+permissions:
+  contents: write
+
+jobs:
+  update-version:
+    name: Sync API version from changelog
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract latest version from CHANGELOG.md
+        id: changelog
+        run: |
+          VERSION=$(grep -m 1 -oP '^## \[?\K\d+\.\d+\.\d+' CHANGELOG.md)
+
+          if [ -z "$VERSION" ]; then
+            echo "Could not extract version from CHANGELOG.md"
+            exit 1
+          fi
+
+          echo "Latest changelog version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Read current version from cmd/api/main.go
+        id: current
+        run: |
+          CURRENT=$(grep -oP '(?<=const version = ")\d+\.\d+\.\d+(?=")' cmd/api/main.go)
+
+          if [ -z "$CURRENT" ]; then
+            echo "Could not read current version from cmd/api/main.go"
+            exit 1
+          fi
+
+          echo "Current API version: $CURRENT"
+          echo "version=$CURRENT" >> "$GITHUB_OUTPUT"
+
+      - name: Update version in cmd/api/main.go
+        if: steps.changelog.outputs.version != steps.current.outputs.version
+        run: |
+          NEW_VERSION="${{ steps.changelog.outputs.version }}"
+          sed -Ei 's/^const version = ".*"$/const version = "'"$NEW_VERSION"'"/' cmd/api/main.go
+          echo "Updated cmd/api/main.go to version $NEW_VERSION"
+
+      - name: Commit and push if changed
+        if: steps.changelog.outputs.version != steps.current.outputs.version
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+          git add cmd/api/main.go
+          git commit -m "chore: bump API version to ${{ steps.changelog.outputs.version }}"
+          git push
