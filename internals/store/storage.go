@@ -15,6 +15,7 @@ var (
 
 type Storage struct {
 	Users interface {
+		GetAllUsers(context.Context) ([]*User, error)
 		GetByID(context.Context, int64) (*User, error)
 		GetByEmail(context.Context, string) (*User, error)
 		Create(context.Context, *sql.Tx, *User) error
