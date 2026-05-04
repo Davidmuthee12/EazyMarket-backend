@@ -10,6 +10,7 @@ import (
 	"github.com/Davidmuthee12/eazymarket/internals/mailer"
 	"github.com/Davidmuthee12/eazymarket/internals/store"
 	cache "github.com/Davidmuthee12/eazymarket/internals/store/cache"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -89,6 +90,15 @@ func main() {
 	defer db.Close()
 	logger.Info("Database connection pool established")
 
+	// Cache
+	var rdb *redis.Client
+	if cfg.redisCfg.enabled {
+		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		logger.Info("Redis cache connection pool established")
+
+		defer rdb.Close()
+	}
+
 	store := store.NewStorage(db)
 
 	jwtAuthentticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.iss, cfg.auth.token.iss)
@@ -106,14 +116,6 @@ func main() {
 		logger:        logger,
 		mailer:        emailClient,
 		authenticator: jwtAuthentticator,
-	}
-
-	if cfg.redisCfg.enabled {
-		rdb := cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
-		defer rdb.Close()
-
-		app.cacheStorage = cache.NewRedisStorage(rdb)
-		logger.Infow("Redis cache enabled", "addr", cfg.redisCfg.addr, "db", cfg.redisCfg.db)
 	}
 
 	mux := app.mount()
