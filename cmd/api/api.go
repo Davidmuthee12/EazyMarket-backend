@@ -13,6 +13,7 @@ import (
 	"github.com/Davidmuthee12/eazymarket/internals/env"
 	"github.com/Davidmuthee12/eazymarket/internals/mailer"
 	"github.com/Davidmuthee12/eazymarket/internals/store"
+	cache "github.com/Davidmuthee12/eazymarket/internals/store/cache"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -26,6 +27,7 @@ type application struct {
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
+	cacheStorage  cache.Storage
 }
 
 type config struct {
@@ -36,6 +38,14 @@ type config struct {
 	auth        authConfig
 	mail        mailConfig
 	frontendURL string
+	redisCfg    redisConfig
+}
+
+type redisConfig struct {
+	addr    string
+	pw      string
+	db      int
+	enabled bool
 }
 
 type dbConfig struct {
@@ -94,6 +104,19 @@ func (app *application) mount() http.Handler {
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/users", app.registerUserHandler)
 			r.Post("/token", app.createTokenHandler)
+		})
+
+		r.Route("/users", func(r chi.Router) {
+			r.Put("/activate/{token}", app.activateUserHandler)
+			r.Route("/{userID}", func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
+				r.Get("/", app.getUserHandler)
+			})
+
+			r.Group(func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
+				r.Get("/", app.getAllUsersHandlers)
+			})
 		})
 
 	})
