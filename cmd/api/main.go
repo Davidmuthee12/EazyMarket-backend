@@ -9,6 +9,7 @@ import (
 	"github.com/Davidmuthee12/eazymarket/internals/env"
 	"github.com/Davidmuthee12/eazymarket/internals/mailer"
 	"github.com/Davidmuthee12/eazymarket/internals/store"
+	cache "github.com/Davidmuthee12/eazymarket/internals/store/cache"
 	"go.uber.org/zap"
 )
 
@@ -59,6 +60,12 @@ func main() {
 			exp:       time.Hour * 24 * 3,
 		},
 		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:5174"),
+		redisCfg: redisConfig{
+			addr:    env.GetString("REDIS_ADDR", "localhost:6379"),
+			pw:      env.GetString("REDIS_PASSWORD", ""),
+			db:      env.GetInt("REDIS_DB", 0),
+			enabled: env.GetBool("REDIS_ENABLED", false),
+		},
 	}
 
 	// logger
@@ -99,6 +106,14 @@ func main() {
 		logger:        logger,
 		mailer:        emailClient,
 		authenticator: jwtAuthentticator,
+	}
+
+	if cfg.redisCfg.enabled {
+		rdb := cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		defer rdb.Close()
+
+		app.cacheStorage = cache.NewRedisStorage(rdb)
+		logger.Infow("Redis cache enabled", "addr", cfg.redisCfg.addr, "db", cfg.redisCfg.db)
 	}
 
 	mux := app.mount()
