@@ -308,3 +308,65 @@ func (s *UserStore) deleteUserInvitations(ctx context.Context, tx *sql.Tx, UserI
 
 	return nil
 }
+
+func (s *UserStore) GetAllUsers(ctx context.Context) ([]*User, error) {
+	query := `
+		SELECT
+			u.id,
+			u.username,
+			u.email,
+			COALESCE(u.avatar_url, ''),
+			u.role_id,
+			u.is_active,
+			u.created_at,
+			r.id,
+			r.name,
+			r.level,
+			COALESCE(r.description, '')
+		FROM users u
+		JOIN roles r ON u.role_id = r.id
+		ORDER BY u.id
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := make([]*User, 0)
+	for rows.Next() {
+		user := &User{}
+		err := rows.Scan(
+			&user.ID,
+			&user.UserName,
+			&user.Email,
+			&user.Avatar_Url,
+			&user.RoleID,
+			&user.IsActive,
+			&user.CreatedAt,
+			&user.Role.ID,
+			&user.Role.Name,
+			&user.Role.Level,
+			&user.Role.Description,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(users) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return users, nil
+}
