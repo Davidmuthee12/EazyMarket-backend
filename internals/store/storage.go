@@ -27,11 +27,15 @@ type Storage struct {
 		GetUpgradeRequests(context.Context) ([]*User, error)
 		UpdateRoleRequest(ctx context.Context, userID string) error
 	}
+	Roles interface {
+		GetByName(context.Context, string) (*Role, error)
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
 		Users: &UserStore{db},
+		Roles: &RoleStore{db},
 	}
 }
 
