@@ -161,3 +161,33 @@ func (app *application) updateRoleHandler(w http.ResponseWriter, r *http.Request
 	}
 
 }
+
+// GetVendorRequests godoc
+//
+//	@Summary		Fetches vendor upgrade requests
+//	@Description	Fetches all user requests to upgrade role to vendor
+//	@Tags			users
+//	@Produce		json
+//	@Success		200	{array}		store.User
+//	@Failure		400	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/admin/vendor-request [get]
+func (app *application) vendorRequestHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	requests, err := app.store.Users.GetUpgradeRequests(ctx)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.badRequestResponse(w, r, err)
+			return
+		default:
+			app.internalServerError(w, r, err)
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, requests); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
