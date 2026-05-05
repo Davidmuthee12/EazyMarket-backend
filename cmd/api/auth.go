@@ -172,7 +172,7 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 	}
 	// generate the token -> add claims
 	claims := jwt.MapClaims{
-		"sub": user.ID,
+		"sub": user.UUID,
 		"exp": time.Now().Add(app.config.auth.token.exp).Unix(),
 		"iat": time.Now().Unix(),
 		"nbf": time.Now().Unix(),
