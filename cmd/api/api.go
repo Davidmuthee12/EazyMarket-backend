@@ -100,7 +100,13 @@ func (app *application) mount() http.Handler {
 	r.Route("/v1", func(r chi.Router) {
 		r.With(app.AuthTokenMiddleware).Get("/health", app.healthCheckHandler)
 		docsURL := "/v1/swagger/doc.json"
-		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
+		r.Get("/swagger/*", httpSwagger.Handler(
+			httpSwagger.URL(docsURL),
+			httpSwagger.UIConfig(map[string]string{
+				"tagsSorter":       "\"alpha\"",
+				"operationsSorter": "\"alpha\"",
+			}),
+		))
 
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/users", app.registerUserHandler)
@@ -119,6 +125,12 @@ func (app *application) mount() http.Handler {
 				r.Use(app.AuthTokenMiddleware)
 				r.Get("/", app.getAllUsersHandlers)
 			})
+		})
+
+		r.Route("/admin", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+			r.Get("/", app.getAllUsersHandlers)
+			r.Get("/vendor-request", app.vendorRequestHandler)
 		})
 
 	})
