@@ -24,6 +24,7 @@ type Storage struct {
 		Activate(context.Context, string) error
 		Delete(context.Context, int64) error
 		UpdateRole(context.Context, string) error
+		GetUpgradeRequests(context.Context) ([]*User, error)
 	}
 }
 
