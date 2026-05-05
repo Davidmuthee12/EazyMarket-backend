@@ -36,7 +36,7 @@ definitions:
       email:
         type: string
       id:
-        type: integer
+        type: string
       is_active:
         type: boolean
       phone:
@@ -72,7 +72,7 @@ definitions:
       email:
         type: string
       id:
-        type: integer
+        type: string
       is_active:
         type: boolean
       phone:
@@ -91,7 +91,7 @@ info:
     email: support@swagger.io
     name: API Support
     url: http://www.swagger.io/support
-  description: This API for the social app.
+  description: This API for the Eazymarket app.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -157,6 +157,26 @@ paths:
       summary: Register a user
       tags:
       - authentication
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Returns API status, environment and version
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Health check
+      tags:
+      - health
   /users/:
     get:
       description: Fetches all users
@@ -180,17 +200,17 @@ paths:
       summary: Fetches all users
       tags:
       - users
-  /users/{userID}/:
+  /users/{userUUID}/:
     get:
       consumes:
       - application/json
       description: Fetches a user profile by ID
       parameters:
-      - description: user ID
+      - description: user UUID
         in: path
-        name: userID
+        name: userUUID
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -210,6 +230,34 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Fetches a user profile
+      tags:
+      - users
+  /users/{userUUID}/upgrade-to-vendor:
+    post:
+      description: Submits a role upgrade request to vendor for the given user
+      parameters:
+      - description: user UUID
+        in: path
+        name: userUUID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Request submitted
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Request a vendor role upgrade
       tags:
       - users
   /users/activate/{token}:
