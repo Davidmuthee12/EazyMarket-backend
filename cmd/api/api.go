@@ -98,6 +98,7 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/v1", func(r chi.Router) {
+		r.With(app.AuthTokenMiddleware).Get("/health", app.healthCheckHandler)
 		docsURL := "/v1/swagger/doc.json"
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
@@ -108,9 +109,10 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/users", func(r chi.Router) {
 			r.Put("/activate/{token}", app.activateUserHandler)
-			r.Route("/{userID}", func(r chi.Router) {
+			r.Route("/{userUUID}", func(r chi.Router) {
 				r.Use(app.AuthTokenMiddleware)
 				r.Get("/", app.getUserHandler)
+				r.Post("/upgrade-to-vendor", app.updateRoleHandler)
 			})
 
 			r.Group(func(r chi.Router) {
