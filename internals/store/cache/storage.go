@@ -9,7 +9,7 @@ import (
 
 type Storage struct {
 	Users interface {
-		Get(context.Context, int64) (*store.User, error)
+		Get(context.Context, string) (*store.User, error)
 		Set(context.Context, *store.User) error
 	}
 }
