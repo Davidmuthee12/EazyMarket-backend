@@ -18,7 +18,7 @@ const version = "1.1.0"
 
 //	@title	EazyMarket APP API
 
-//	@description	This API for the social app.
+//	@description	This API for the Eazymarket app.
 //	@termsOfService	http://swagger.io/terms/
 
 //	@contact.name	API Support
