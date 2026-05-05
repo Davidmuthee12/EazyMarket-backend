@@ -229,3 +229,8 @@ func (app *application) approveVendorHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 }
+
+func getUserFromCtx(r *http.Request) *store.User {
+	user, _ := r.Context().Value(userCtx).(*store.User)
+	return user
+}
