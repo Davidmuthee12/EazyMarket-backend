@@ -438,11 +438,11 @@ func (s *UserStore) UpdateRole(ctx context.Context, userUUID string) error {
 	return err
 }
 
-func (s *UserStore) UpdateRoleRequest(ctx context.Context, userID int64) error {
+func (s *UserStore) UpdateRoleRequest(ctx context.Context, userID string) error {
 	query := `
 		UPDATE users
-		SET role_id = (SELECT id FROM roles WHERE name = 'vendor')
-		WHERE id = $1
+		SET role = 'vendor', role_id = (SELECT id FROM roles WHERE name = 'vendor')
+		WHERE uuid = $1
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
