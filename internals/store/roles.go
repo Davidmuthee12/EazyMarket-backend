@@ -1,6 +1,9 @@
 package store
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+)
 
 type Role struct {
 	ID          int64  `json:"role_id"`
@@ -10,6 +13,33 @@ type Role struct {
 }
 
 type RoleStore struct {
-	//lint:ignore U1000 will be used when role queries are implemented
 	db *sql.DB
+}
+
+func (s *RoleStore) GetByName(ctx context.Context, slug string) (*Role, error) {
+	query := `
+		SELECT id, name, description, level FROM roles
+		WHERE name = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	role := &Role{}
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		slug,
+	).Scan(
+		&role.ID,
+		&role.Name,
+		&role.Description,
+		&role.Level,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return role, nil
 }
