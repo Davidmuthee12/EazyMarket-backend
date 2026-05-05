@@ -2,10 +2,10 @@ package main
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/Davidmuthee12/eazymarket/internals/store"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type userKey string
@@ -19,23 +19,23 @@ const userCtx userKey = "user"
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			userID	path		int	true	"user ID"
-//	@Success		200		{object}	store.User
-//	@Failure		400		{object}	error
-//	@Failure		404		{object}	error
-//	@Failure		500		{object}	error
+//	@Param			userUUID	path		string	true	"user UUID"
+//	@Success		200			{object}	store.User
+//	@Failure		400			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
 //	@Security		ApiKeyAuth
-//	@Router			/users/{userID}/ [get]
+//	@Router			/users/{userUUID}/ [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
-	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
-	if err != nil {
+	userUUID := chi.URLParam(r, "userUUID")
+	if _, err := uuid.Parse(userUUID); err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
 	ctx := r.Context()
 
-	user, err := app.getUser(ctx, userID)
+	user, err := app.getUser(ctx, userUUID)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -112,4 +112,52 @@ func (app *application) getAllUsersHandlers(w http.ResponseWriter, r *http.Reque
 	if err := app.jsonResponse(w, http.StatusOK, users); err != nil {
 		app.internalServerError(w, r, err)
 	}
+}
+
+// UpdateRole godoc
+//
+//	@Summary		Request a vendor role upgrade
+//	@Description	Submits a role upgrade request to vendor for the given user
+//	@Tags			users
+//	@Produce		json
+//	@Param			userUUID	path	string	true	"user UUID"
+//	@Success		200			"Request submitted"
+//	@Failure		400			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/{userUUID}/upgrade-to-vendor [post]
+func (app *application) updateRoleHandler(w http.ResponseWriter, r *http.Request) {
+	userUUID := chi.URLParam(r, "userUUID")
+	if _, err := uuid.Parse(userUUID); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+
+	user, err := app.getUser(ctx, userUUID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := app.store.Users.UpdateRole(ctx, user.UUID); err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
+
 }
