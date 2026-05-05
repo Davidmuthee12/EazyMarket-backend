@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This API for the social app.",
+        "description": "This API for the Eazymarket app.",
         "title": "EazyMarket APP API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
@@ -104,6 +104,36 @@
                 }
             }
         },
+        "/health": {
+            "get": {
+                "description": "Returns API status, environment and version",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/users/": {
             "get": {
                 "security": [
@@ -182,7 +212,7 @@
                 }
             }
         },
-        "/users/{userID}/": {
+        "/users/{userUUID}/": {
             "get": {
                 "security": [
                     {
@@ -202,9 +232,9 @@
                 "summary": "Fetches a user profile",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "user ID",
-                        "name": "userID",
+                        "type": "string",
+                        "description": "user UUID",
+                        "name": "userUUID",
                         "in": "path",
                         "required": true
                     }
@@ -215,6 +245,49 @@
                         "schema": {
                             "$ref": "#/definitions/store.User"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/users/{userUUID}/upgrade-to-vendor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Submits a role upgrade request to vendor for the given user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Request a vendor role upgrade",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user UUID",
+                        "name": "userUUID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request submitted"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -284,7 +357,7 @@
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_active": {
                     "type": "boolean"
@@ -339,7 +412,7 @@
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_active": {
                     "type": "boolean"
