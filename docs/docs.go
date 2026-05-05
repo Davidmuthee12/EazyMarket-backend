@@ -112,6 +112,36 @@ const docTemplate = `{
                 }
             }
         },
+        "/health": {
+            "get": {
+                "description": "Returns API status, environment and version",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/users/": {
             "get": {
                 "security": [
@@ -190,7 +220,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{userID}/": {
+        "/users/{userUUID}/": {
             "get": {
                 "security": [
                     {
@@ -210,9 +240,9 @@ const docTemplate = `{
                 "summary": "Fetches a user profile",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "user ID",
-                        "name": "userID",
+                        "type": "string",
+                        "description": "user UUID",
+                        "name": "userUUID",
                         "in": "path",
                         "required": true
                     }
@@ -223,6 +253,49 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/store.User"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/users/{userUUID}/upgrade-to-vendor": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Submits a role upgrade request to vendor for the given user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Request a vendor role upgrade",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user UUID",
+                        "name": "userUUID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request submitted"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -292,7 +365,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_active": {
                     "type": "boolean"
@@ -347,7 +420,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_active": {
                     "type": "boolean"
@@ -386,7 +459,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/v1",
 	Schemes:          []string{},
 	Title:            "EazyMarket APP API",
-	Description:      "This API for the social app.",
+	Description:      "This API for the Eazymarket app.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
