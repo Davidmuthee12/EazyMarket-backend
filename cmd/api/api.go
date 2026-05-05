@@ -131,6 +131,7 @@ func (app *application) mount() http.Handler {
 			r.Use(app.AuthTokenMiddleware)
 			r.Get("/", app.getAllUsersHandlers)
 			r.Get("/vendor-request", app.vendorRequestHandler)
+			r.Put("/vendor-request/{userUUID}/approve", app.approveVendorHandler)
 		})
 
 	})
