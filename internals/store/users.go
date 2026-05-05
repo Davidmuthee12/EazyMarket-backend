@@ -23,7 +23,8 @@ type password struct {
 }
 
 type User struct {
-	ID         int64    `json:"id"`
+	ID         int64    `json:"-"`
+	UUID       string   `json:"id"`
 	UserName   string   `json:"username"`
 	Phone      int64    `json:"phone"`
 	Avatar_Url string   `json:"avatar_url"`
@@ -56,7 +57,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 	query := `
 		INSERT INTO users(username, email, phone, password, role_id)
 		VALUES ($1, $2, $3, $4, (SELECT id FROM roles WHERE name = $5))
-		RETURNING id, created_at
+		RETURNING id, uuid, created_at
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -76,6 +77,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 		role,
 	).Scan(
 		&user.ID,
+		&user.UUID,
 		&user.CreatedAt,
 	)
 
@@ -105,7 +107,7 @@ func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token strin
 		}
 
 		// create the user invite
-		if err := s.CreateUserInvitation(ctx, tx, token, invitationExp, user.ID); err != nil {
+		if err := s.CreateUserInvitation(ctx, tx, token, invitationExp, user.UUID); err != nil {
 			return err
 		}
 
@@ -113,15 +115,15 @@ func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token strin
 	})
 }
 
-func (s *UserStore) CreateUserInvitation(ctx context.Context, tx *sql.Tx, token string, exp time.Duration, userID int64) error {
+func (s *UserStore) CreateUserInvitation(ctx context.Context, tx *sql.Tx, token string, exp time.Duration, userUUID string) error {
 	query := `
-		INSERT INTO user_invitation (token, user_id, expiry) VALUES ($1, $2, $3)
+		INSERT INTO user_invitation (token, user_uuid, expiry) VALUES ($1, $2, $3)
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	_, err := tx.ExecContext(ctx, query, token, userID, time.Now().Add(exp))
+	_, err := tx.ExecContext(ctx, query, token, userUUID, time.Now().Add(exp))
 	if err != nil {
 		return err
 	}
@@ -131,7 +133,7 @@ func (s *UserStore) CreateUserInvitation(ctx context.Context, tx *sql.Tx, token 
 
 func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 	query := `
-		SELECT users.id, username, email, password, created_at, roles.*
+		SELECT users.id, users.uuid, username, email, password, created_at, roles.*
 		FROM users
 		JOIN roles ON  (users.role_id = roles.id)
 		WHERE users.id = $1 AND is_active = true
@@ -147,6 +149,48 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 		userID,
 	).Scan(
 		&user.ID,
+		&user.UUID,
+		&user.UserName,
+		&user.Email,
+		&user.Password.hash,
+		&user.CreatedAt,
+		&user.Role.ID,
+		&user.Role.Name,
+		&user.Role.Level,
+		&user.Role.Description,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return user, nil
+}
+
+func (s *UserStore) GetByUUID(ctx context.Context, userUUID string) (*User, error) {
+	query := `
+		SELECT users.id, users.uuid, username, email, password, created_at, roles.*
+		FROM users
+		JOIN roles ON  (users.role_id = roles.id)
+		WHERE users.uuid = $1 AND is_active = true
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	user := &User{}
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		userUUID,
+	).Scan(
+		&user.ID,
+		&user.UUID,
 		&user.UserName,
 		&user.Email,
 		&user.Password.hash,
@@ -171,7 +215,7 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, username, email, password, created_at FROM users
+		SELECT id, uuid, username, email, password, created_at FROM users
 		WHERE email = $1 AND is_active = true
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -180,6 +224,7 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 	user := &User{}
 	err := s.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
+		&user.UUID,
 		&user.UserName,
 		&user.Email,
 		&user.Password.hash,
@@ -212,7 +257,7 @@ func (s *UserStore) Activate(ctx context.Context, token string) error {
 			return err
 		}
 		// 3. clean/deleting invitations
-		if err := s.deleteUserInvitations(ctx, tx, user.ID); err != nil {
+		if err := s.deleteUserInvitations(ctx, tx, user.UUID); err != nil {
 			return err
 		}
 
@@ -222,10 +267,16 @@ func (s *UserStore) Activate(ctx context.Context, token string) error {
 
 func (s *UserStore) Delete(ctx context.Context, userID int64) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
-		if err := s.delete(ctx, tx, userID); err != nil {
+		user, err := s.GetByID(ctx, userID)
+		if err != nil {
 			return err
 		}
-		if err := s.deleteUserInvitations(ctx, tx, userID); err != nil {
+
+		if err := s.deleteUserInvitations(ctx, tx, user.UUID); err != nil {
+			return err
+		}
+
+		if err := s.delete(ctx, tx, userID); err != nil {
 			return err
 		}
 		return nil
@@ -249,9 +300,9 @@ func (s *UserStore) delete(ctx context.Context, tx *sql.Tx, id int64) error {
 
 func (s *UserStore) getUserFromInvitation(ctx context.Context, tx *sql.Tx, token string) (*User, error) {
 	query := `
-	 SELECT u.id, u.username, u.email, u.created_at, u.is_active
+	 SELECT u.id, u.uuid, u.username, u.email, u.created_at, u.is_active
 	 FROM users u
-	 JOIN user_invitation ui on u.id = ui.user_id
+	 JOIN user_invitation ui on u.uuid = ui.user_uuid
 	 WHERE ui.token = $1 AND ui.expiry > $2
 	`
 
@@ -264,6 +315,7 @@ func (s *UserStore) getUserFromInvitation(ctx context.Context, tx *sql.Tx, token
 	user := &User{}
 	err := tx.QueryRowContext(ctx, query, hashToken, time.Now()).Scan(
 		&user.ID,
+		&user.UUID,
 		&user.UserName,
 		&user.Email,
 		&user.CreatedAt,
@@ -295,13 +347,13 @@ func (s *UserStore) update(ctx context.Context, tx *sql.Tx, user *User) error {
 	return nil
 }
 
-func (s *UserStore) deleteUserInvitations(ctx context.Context, tx *sql.Tx, UserID int64) error {
-	query := `DELETE FROM user_invitation WHERE user_id = $1`
+func (s *UserStore) deleteUserInvitations(ctx context.Context, tx *sql.Tx, userUUID string) error {
+	query := `DELETE FROM user_invitation WHERE user_uuid = $1`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	_, err := tx.ExecContext(ctx, query, UserID)
+	_, err := tx.ExecContext(ctx, query, userUUID)
 	if err != nil {
 		return err
 	}
@@ -313,6 +365,7 @@ func (s *UserStore) GetAllUsers(ctx context.Context) ([]*User, error) {
 	query := `
 		SELECT
 			u.id,
+			u.uuid,
 			u.username,
 			u.email,
 			COALESCE(u.avatar_url, ''),
@@ -342,6 +395,7 @@ func (s *UserStore) GetAllUsers(ctx context.Context) ([]*User, error) {
 		user := &User{}
 		err := rows.Scan(
 			&user.ID,
+			&user.UUID,
 			&user.UserName,
 			&user.Email,
 			&user.Avatar_Url,
@@ -369,4 +423,44 @@ func (s *UserStore) GetAllUsers(ctx context.Context) ([]*User, error) {
 	}
 
 	return users, nil
+}
+
+func (s *UserStore) UpdateRole(ctx context.Context, userUUID string) error {
+	query := `
+		INSERT INTO role_upgrade_requests (user_id, requested_role_id)
+		VALUES ($1, (SELECT id FROM roles WHERE name = 'vendor'))
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	_, err := s.db.ExecContext(ctx, query, userUUID)
+	return err
+}
+
+func (s *UserStore) UpdateRoleRequest(ctx context.Context, userID int64) error {
+	query := `
+		UPDATE users
+		SET role_id = (SELECT id FROM roles WHERE name = 'vendor')
+		WHERE id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	res, err := s.db.ExecContext(ctx, query, userID)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
