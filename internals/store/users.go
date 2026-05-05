@@ -117,7 +117,8 @@ func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token strin
 
 func (s *UserStore) CreateUserInvitation(ctx context.Context, tx *sql.Tx, token string, exp time.Duration, userUUID string) error {
 	query := `
-		INSERT INTO user_invitation (token, user_uuid, expiry) VALUES ($1, $2, $3)
+		INSERT INTO user_invitation (token, user_uuid, expiry, user_id)
+		VALUES ($1, $2, $3, (SELECT id FROM users WHERE uuid = $2))
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
