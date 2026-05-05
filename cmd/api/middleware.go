@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/Davidmuthee12/eazymarket/internals/store"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
@@ -33,15 +33,20 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 		}
 
 		claims, _ := jwtToken.Claims.(jwt.MapClaims)
-		userID, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["sub"]), 10, 64)
-		if err != nil {
+		userUUID, ok := claims["sub"].(string)
+		if !ok {
+			app.unauthorizedErrorResponse(w, r, fmt.Errorf("invalid token subject"))
+			return
+		}
+
+		if _, err := uuid.Parse(userUUID); err != nil {
 			app.unauthorizedErrorResponse(w, r, err)
 			return
 		}
 
 		ctx := r.Context()
 
-		user, err := app.getUser(ctx, userID)
+		user, err := app.getUser(ctx, userUUID)
 		if err != nil {
 			app.unauthorizedErrorResponse(w, r, err)
 			return
@@ -52,21 +57,21 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (app *application) getUser(ctx context.Context, userID int64) (*store.User, error) {
+func (app *application) getUser(ctx context.Context, userUUID string) (*store.User, error) {
 	if !app.config.redisCfg.enabled {
-		return app.store.Users.GetByID(ctx, userID)
+		return app.store.Users.GetByUUID(ctx, userUUID)
 	}
 
-	app.logger.Infow("Cache hit", "key", "user", "id", userID)
+	app.logger.Infow("Cache hit", "key", "user", "id", userUUID)
 
-	user, err := app.cacheStorage.Users.Get(ctx, userID)
+	user, err := app.cacheStorage.Users.Get(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
 
 	if user == nil {
-		app.logger.Infow("Fetching from DB", "id", userID)
-		user, err := app.store.Users.GetByID(ctx, userID)
+		app.logger.Infow("Fetching from DB", "id", userUUID)
+		user, err := app.store.Users.GetByUUID(ctx, userUUID)
 		if err != nil {
 			return nil, err
 		}
