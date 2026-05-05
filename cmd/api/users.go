@@ -191,3 +191,41 @@ func (app *application) vendorRequestHandler(w http.ResponseWriter, r *http.Requ
 		app.internalServerError(w, r, err)
 	}
 }
+
+// ApproveVendor godoc
+//
+//	@Summary		Approves a vendor upgrade request
+//	@Description	Approves a pending vendor role upgrade request for the given user
+//	@Tags			admin
+//	@Produce		json
+//	@Param			userUUID	path	string	true	"user UUID"
+//	@Success		200			"Vendor request approved"
+//	@Failure		400			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/admin/vendor-request/{userUUID}/approve [put]
+func (app *application) approveVendorHandler(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userUUID")
+	if _, err := uuid.Parse(userID); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+
+	err := app.store.Users.UpdateRoleRequest(ctx, userID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
+
+}
