@@ -464,3 +464,65 @@ func (s *UserStore) UpdateRoleRequest(ctx context.Context, userID int64) error {
 
 	return nil
 }
+
+func (s *UserStore) GetUpgradeRequests(ctx context.Context) ([]*User, error) {
+	query := `
+		SELECT
+			u.id,
+			u.uuid,
+			u.username,
+			u.email,
+			COALESCE(u.avatar_url, ''),
+			u.role_id,
+			u.is_active,
+			u.created_at AS joined,
+			r.created_at AS requested_at,
+			r.status
+		FROM users u
+		JOIN role_upgrade_requests r ON u.uuid = r.user_id
+		ORDER BY u.id
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	requests := make([]*User, 0)
+	for rows.Next() {
+		user := &User{}
+		var requestedAt time.Time
+
+		err := rows.Scan(
+			&user.ID,
+			&user.UUID,
+			&user.UserName,
+			&user.Email,
+			&user.Avatar_Url,
+			&user.RoleID,
+			&user.IsActive,
+			&user.CreatedAt,
+			&requestedAt,
+			&user.Status,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		requests = append(requests, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(requests) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return requests, nil
+}
