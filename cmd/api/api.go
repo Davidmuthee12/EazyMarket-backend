@@ -129,6 +129,7 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/admin", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
+			r.Use(app.RequireRole("admin"))
 			r.Get("/", app.getAllUsersHandlers)
 			r.Get("/vendor-request", app.vendorRequestHandler)
 			r.Put("/vendor-request/{userUUID}/approve", app.approveVendorHandler)
