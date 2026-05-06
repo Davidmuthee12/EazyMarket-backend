@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.1.0...v1.2.0) (2026-05-06)
+
+
+### Features
+
+* add reject vendor-request route in admin router ([546102b](https://github.com/Davidmuthee12/EazyMarket-backend/commit/546102bfa755d622636aa093a5cd4526cea9a4d1))
+* add RejectRequest store method for role upgrade requests ([e7625db](https://github.com/Davidmuthee12/EazyMarket-backend/commit/e7625db64481cf3013f3c3904a4936d948a05371))
+* Add reviewer tracking to role upgrade requests with updateRequestTable function ([5bab53c](https://github.com/Davidmuthee12/EazyMarket-backend/commit/5bab53c63964f69193006e26c33a5f609b59c4d2))
+* Extract and pass authenticated admin reviewer to approveVendorHandler for audit tracking ([19c0042](https://github.com/Davidmuthee12/EazyMarket-backend/commit/19c0042f8ec4d00f10ea2c156272910b5f183dd1))
+* implement rejectVendorHandler with reviewer context ([e1557b9](https://github.com/Davidmuthee12/EazyMarket-backend/commit/e1557b9f3c766c2b9ce1d31544a6199e61d98af5))
+
 ## [1.1.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.0.0...v1.1.0) (2026-05-04)
 
 
