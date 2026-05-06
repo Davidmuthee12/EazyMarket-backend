@@ -149,6 +149,34 @@ paths:
       summary: Approves a vendor upgrade request
       tags:
       - admin
+  /admin/vendor-request/{userUUID}/reject:
+    put:
+      description: Rejects a pending vendor role upgrade request for the given user
+      parameters:
+      - description: user UUID
+        in: path
+        name: userUUID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Vendor request rejected
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Rejects a vendor upgrade request
+      tags:
+      - admin
   /authentication/token:
     post:
       consumes:
