@@ -214,7 +214,14 @@ func (app *application) approveVendorHandler(w http.ResponseWriter, r *http.Requ
 
 	ctx := r.Context()
 
-	err := app.store.Users.UpdateRoleRequest(ctx, userID)
+	// Get the authenticated admin user from context
+	reviewer := getUserFromCtx(r)
+	if reviewer == nil {
+		app.internalServerError(w, r, nil)
+		return
+	}
+
+	err := app.store.Users.UpdateRoleRequest(ctx, userID, reviewer.UUID)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
