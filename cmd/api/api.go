@@ -133,6 +133,7 @@ func (app *application) mount() http.Handler {
 			r.Get("/", app.getAllUsersHandlers)
 			r.Get("/vendor-request", app.vendorRequestHandler)
 			r.Put("/vendor-request/{userUUID}/approve", app.approveVendorHandler)
+			r.Put("/vendor-request/{userUUID}/reject", app.rejectVendorHandler)
 		})
 
 	})
