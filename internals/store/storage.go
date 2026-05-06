@@ -26,6 +26,7 @@ type Storage struct {
 		UpdateRole(context.Context, string) error
 		GetUpgradeRequests(context.Context) ([]*User, error)
 		UpdateRoleRequest(ctx context.Context, userID, reviewerID string) error
+		RejectRequest(ctx context.Context, userID, reviewerID string) error
 	}
 	Roles interface {
 		GetByName(context.Context, string) (*Role, error)
