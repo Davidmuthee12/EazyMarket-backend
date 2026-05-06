@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const version = "1.1.0"
+const version = "1.2.0"
 
 //	@title	EazyMarket APP API
 
