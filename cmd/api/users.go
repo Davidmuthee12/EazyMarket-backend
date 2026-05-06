@@ -214,7 +214,7 @@ func (app *application) approveVendorHandler(w http.ResponseWriter, r *http.Requ
 
 	ctx := r.Context()
 
-	// Get the authenticated admin user from context
+	// Get the authenticated admin/reviewer user from context
 	reviewer := getUserFromCtx(r)
 	if reviewer == nil {
 		app.internalServerError(w, r, nil)
@@ -222,6 +222,51 @@ func (app *application) approveVendorHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	err := app.store.Users.UpdateRoleRequest(ctx, userID, reviewer.UUID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
+
+}
+
+// RejectVendor godoc
+//
+//	@Summary		Rejects a vendor upgrade request
+//	@Description	Rejects a pending vendor role upgrade request for the given user
+//	@Tags			admin
+//	@Produce		json
+//	@Param			userUUID	path	string	true	"user UUID"
+//	@Success		200			"Vendor request rejected"
+//	@Failure		400			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/admin/vendor-request/{userUUID}/reject [put]
+func (app *application) rejectVendorHandler(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userUUID")
+	if _, err := uuid.Parse(userID); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+
+	// Get reviewerID from context
+	reviewer := getUserFromCtx(r)
+	if reviewer == nil {
+		app.internalServerError(w, r, nil)
+		return
+	}
+
+	err := app.store.Users.RejectRequest(ctx, userID, reviewer.UUID)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
