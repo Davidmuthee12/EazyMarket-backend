@@ -559,3 +559,30 @@ func (s *UserStore) updateRequestTable(ctx context.Context, userID, reviewerID s
 
 	return nil
 }
+
+func (s *UserStore) RejectRequest(ctx context.Context, userID, reviewerID string) error {
+	query := `
+		UPDATE role_upgrade_requests
+		SET status = 'Rejected', reviewed_by = $2, reviewed_at = NOW()
+		WHERE user_id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	res, err := s.db.ExecContext(ctx, query, userID, reviewerID)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
