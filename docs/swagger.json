@@ -425,6 +425,53 @@
                     }
                 }
             }
+        },
+        "/vendor/profile": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a vendor profile for the authenticated vendor user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vendor"
+                ],
+                "summary": "Creates a vendor profile",
+                "parameters": [
+                    {
+                        "description": "Vendor profile payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.UpdateVendorProfile"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Vendor profile created",
+                        "schema": {
+                            "$ref": "#/definitions/store.Vendor"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -461,6 +508,48 @@
                     "minLength": 3
                 },
                 "username": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "main.UpdateVendorProfile": {
+            "type": "object",
+            "required": [
+                "description",
+                "storename",
+                "subdomain"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "banner_url": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "business_email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "business_phone": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "logo_url": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "storename": {
+                    "type": "string",
+                    "maxLength": 150
+                },
+                "subdomain": {
                     "type": "string",
                     "maxLength": 100
                 }
@@ -552,6 +641,38 @@
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "store.Vendor": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "banner_url": {
+                    "type": "string"
+                },
+                "business_email": {
+                    "type": "string"
+                },
+                "business_phone": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "storename": {
+                    "type": "string"
+                },
+                "subdomain": {
                     "type": "string"
                 }
             }

@@ -27,6 +27,37 @@ definitions:
     - password
     - username
     type: object
+  main.UpdateVendorProfile:
+    properties:
+      address:
+        maxLength: 100
+        type: string
+      banner_url:
+        maxLength: 100
+        type: string
+      business_email:
+        maxLength: 255
+        type: string
+      business_phone:
+        maxLength: 20
+        type: string
+      description:
+        maxLength: 250
+        type: string
+      logo_url:
+        maxLength: 100
+        type: string
+      storename:
+        maxLength: 150
+        type: string
+      subdomain:
+        maxLength: 100
+        type: string
+    required:
+    - description
+    - storename
+    - subdomain
+    type: object
   main.UserWithToken:
     properties:
       avatar_url:
@@ -84,6 +115,27 @@ definitions:
       status:
         type: string
       username:
+        type: string
+    type: object
+  store.Vendor:
+    properties:
+      address:
+        type: string
+      banner_url:
+        type: string
+      business_email:
+        type: string
+      business_phone:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      logo_url:
+        type: string
+      storename:
+        type: string
+      subdomain:
         type: string
     type: object
 info:
@@ -366,6 +418,36 @@ paths:
       summary: Activates/Register a user
       tags:
       - users
+  /vendor/profile:
+    post:
+      consumes:
+      - application/json
+      description: Creates a vendor profile for the authenticated vendor user
+      parameters:
+      - description: Vendor profile payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.UpdateVendorProfile'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Vendor profile created
+          schema:
+            $ref: '#/definitions/store.Vendor'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Creates a vendor profile
+      tags:
+      - vendor
 securityDefinitions:
   ApiKeyAuth:
     in: header
