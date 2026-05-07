@@ -31,12 +31,17 @@ type Storage struct {
 	Roles interface {
 		GetByName(context.Context, string) (*Role, error)
 	}
+
+	Vendor interface {
+		CreateVendorProfile(ctx context.Context, Vendor *Vendor, userUUID string) error
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Users: &UserStore{db},
-		Roles: &RoleStore{db},
+		Users:  &UserStore{db},
+		Roles:  &RoleStore{db},
+		Vendor: &VenderStore{db},
 	}
 }
 
