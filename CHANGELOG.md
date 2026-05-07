@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.2.0...v1.3.0) (2026-05-07)
+
+
+### Features
+
+* **api:** add vendorProfileHandler to create vendor profile ([301b6d1](https://github.com/Davidmuthee12/EazyMarket-backend/commit/301b6d1b9eebd82d855366ea80a71c9a979d25df))
+* **api:** register POST /vendor/profile route ([5ec639e](https://github.com/Davidmuthee12/EazyMarket-backend/commit/5ec639e8a08561e5f7a06013ef1cc20702d2fb21))
+* **migrations:** add migration 007 to create vendor_profiles table ([8419277](https://github.com/Davidmuthee12/EazyMarket-backend/commit/841927750f1eae20076ea6e195deb9b120c0979a))
+* **store:** add Vendor model and VenderStore with CreateVendorProfile ([2184d95](https://github.com/Davidmuthee12/EazyMarket-backend/commit/2184d95b8f4e246b1e1ebaac6d10727860683c21))
+
+
+### Bug Fixes
+
+* **store:** wire VenderStore into NewStorage ([67677a6](https://github.com/Davidmuthee12/EazyMarket-backend/commit/67677a6e80cfd27861dc80462238e4dc9ad41f3d))
+
 ## [1.2.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.1.0...v1.2.0) (2026-05-06)
 
 
