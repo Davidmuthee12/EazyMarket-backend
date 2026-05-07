@@ -136,6 +136,12 @@ func (app *application) mount() http.Handler {
 			r.Put("/vendor-request/{userUUID}/reject", app.rejectVendorHandler)
 		})
 
+		r.Route("/vendor", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+			r.Use(app.RequireRole("vendor"))
+			r.Post("/profile", app.vendorProfileHandler)
+		})
+
 	})
 
 	return r
