@@ -419,6 +419,26 @@ paths:
       tags:
       - users
   /vendor/profile:
+    get:
+      description: Retrieves the vendor profile for the authenticated vendor user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Vendor profile retrieved
+          schema:
+            $ref: '#/definitions/store.Vendor'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get vendor profile
+      tags:
+      - vendor
     post:
       consumes:
       - application/json
