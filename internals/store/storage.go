@@ -34,6 +34,7 @@ type Storage struct {
 
 	Vendor interface {
 		CreateVendorProfile(ctx context.Context, Vendor *Vendor, userUUID string) error
+		GetVendorByUUID(ctx context.Context, userID string) (*Vendor, error)
 	}
 }
 
