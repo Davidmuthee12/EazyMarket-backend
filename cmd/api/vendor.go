@@ -76,3 +76,34 @@ func (app *application) vendorProfileHandler(w http.ResponseWriter, r *http.Requ
 		app.internalServerError(w, r, err)
 	}
 }
+
+// GetVendorProfile godoc
+//
+//	@Summary		Get vendor profile
+//	@Description	Retrieves the vendor profile for the authenticated vendor user
+//	@Tags			vendor
+//	@Produce		json
+//	@Success		200	{object}	store.Vendor	"Vendor profile retrieved"
+//	@Failure		400	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/vendor/profile [get]
+func (app *application) getVendorProfileHandler(w http.ResponseWriter, r *http.Request) {
+	user := getUserFromCtx(r)
+
+	ctx := r.Context()
+
+	profile, err := app.store.Vendor.GetVendorByUUID(ctx, user.UUID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.badRequestResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, profile); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
