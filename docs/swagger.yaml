@@ -179,6 +179,25 @@ info:
   title: EazyMarket APP API
 paths:
   /admin/categories:
+    get:
+      description: Retrieves all product categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Categories retrieved
+          schema:
+            items:
+              $ref: '#/definitions/store.Category'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get all categories
+      tags:
+      - categories
     post:
       consumes:
       - application/json
@@ -206,6 +225,69 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Add a category
+      tags:
+      - categories
+  /admin/categories/{id}:
+    delete:
+      description: Deletes a product category by ID. Requires admin privileges.
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a category
+      tags:
+      - categories
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing product category. Requires admin privileges.
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Category update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.AddCategory'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category updated
+          schema:
+            $ref: '#/definitions/store.Category'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update a category
       tags:
       - categories
   /admin/vendor-request:
