@@ -39,6 +39,9 @@ type Storage struct {
 
 	Category interface {
 		AddCategory(ctx context.Context, category *Category) error
+		GetCategories(context.Context) ([]Category, error)
+		DeleteCategory(ctx context.Context, categoryID string) error
+		UpdateCategory(ctx context.Context, category *Category) error
 	}
 }
 
