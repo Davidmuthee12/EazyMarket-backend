@@ -1,5 +1,20 @@
 basePath: /v1
 definitions:
+  main.AddCategory:
+    properties:
+      image_url:
+        maxLength: 100
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      slug:
+        maxLength: 100
+        type: string
+    required:
+    - name
+    - slug
+    type: object
   main.CreateUserTokenPayload:
     properties:
       email:
@@ -83,6 +98,19 @@ definitions:
       username:
         type: string
     type: object
+  store.Category:
+    properties:
+      created_at:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      parent_id:
+        type: string
+      slug:
+        type: string
+    type: object
   store.Role:
     properties:
       description:
@@ -150,6 +178,36 @@ info:
   termsOfService: http://swagger.io/terms/
   title: EazyMarket APP API
 paths:
+  /admin/categories:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new product category. Requires admin privileges.
+      parameters:
+      - description: Category payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.AddCategory'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Category created
+          schema:
+            $ref: '#/definitions/store.Category'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Add a category
+      tags:
+      - categories
   /admin/vendor-request:
     get:
       description: Fetches all user requests to upgrade role to vendor
