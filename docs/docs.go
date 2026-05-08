@@ -435,6 +435,37 @@ const docTemplate = `{
             }
         },
         "/vendor/profile": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the vendor profile for the authenticated vendor user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vendor"
+                ],
+                "summary": "Get vendor profile",
+                "responses": {
+                    "200": {
+                        "description": "Vendor profile retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/store.Vendor"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
