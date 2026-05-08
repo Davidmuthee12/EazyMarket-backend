@@ -36,13 +36,18 @@ type Storage struct {
 		CreateVendorProfile(ctx context.Context, Vendor *Vendor, userUUID string) error
 		GetVendorByUUID(ctx context.Context, userID string) (*Vendor, error)
 	}
+
+	Category interface {
+		AddCategory(ctx context.Context, category *Category) error
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Users:  &UserStore{db},
-		Roles:  &RoleStore{db},
-		Vendor: &VenderStore{db},
+		Users:    &UserStore{db},
+		Roles:    &RoleStore{db},
+		Vendor:   &VenderStore{db},
+		Category: &CategoryStore{db},
 	}
 }
 
