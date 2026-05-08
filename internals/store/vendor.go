@@ -84,3 +84,50 @@ func (s *VenderStore) CreateVendorProfile(ctx context.Context, Vendor *Vendor, u
 	return nil
 
 }
+
+func (s *VenderStore) GetVendorByUUID(ctx context.Context, userID string) (*Vendor, error) {
+	query := `
+		SELECT
+			store_name,
+			subdomain,
+			description,
+			logo_url,
+			banner_url,
+			business_email,
+			business_phone,
+			address,
+			created_at
+		FROM vendor_profiles
+		WHERE user_id = $1
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	vendor := &Vendor{}
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		userID,
+	).Scan(
+		&vendor.Storename,
+		&vendor.Subdomain,
+		&vendor.Description,
+		&vendor.Logo_URL,
+		&vendor.Banner_URL,
+		&vendor.Business_Email,
+		&vendor.Business_Phone,
+		&vendor.Address,
+		&vendor.CreatedAt,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return vendor, nil
+}
