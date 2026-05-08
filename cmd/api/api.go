@@ -135,6 +135,9 @@ func (app *application) mount() http.Handler {
 			r.Put("/vendor-request/{userUUID}/approve", app.approveVendorHandler)
 			r.Put("/vendor-request/{userUUID}/reject", app.rejectVendorHandler)
 			r.Post("/categories", app.addCategoriesHandler)
+			r.Get("/categories", app.getCategoriesHandler)
+			r.Delete("/categories/{id}", app.deleteCategoryHandler)
+			r.Put("/categories/{id}", app.updateCategoryHandler)
 		})
 
 		r.Route("/vendor", func(r chi.Router) {
