@@ -140,6 +140,7 @@ func (app *application) mount() http.Handler {
 			r.Use(app.AuthTokenMiddleware)
 			r.Use(app.RequireRole("vendor"))
 			r.Post("/profile", app.vendorProfileHandler)
+			r.Get("/profile", app.getVendorProfileHandler)
 		})
 
 	})
