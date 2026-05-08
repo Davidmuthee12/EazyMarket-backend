@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.3.0...v1.4.0) (2026-05-08)
+
+
+### Features
+
+* **api:** add category HTTP handlers in category.go ([b4a93a6](https://github.com/Davidmuthee12/EazyMarket-backend/commit/b4a93a6a8b07282456e6d048084f7c5f2d44a4f4))
+* **api:** add getCategoriesHandler, deleteCategoryHandler, and updateCategoryHandler ([e6838f8](https://github.com/Davidmuthee12/EazyMarket-backend/commit/e6838f8c9e08f1aa9ed2507fd2995a22856bcde8))
+* **api:** expand vendor handler responses in vendor.go ([69e1f90](https://github.com/Davidmuthee12/EazyMarket-backend/commit/69e1f90c9b17ca3496bb9ebc87a1f20e9ef95469))
+* **router:** register GET, DELETE, and PUT routes for /admin/categories ([4794da4](https://github.com/Davidmuthee12/EazyMarket-backend/commit/4794da4dd58d978c75d630da3f8a1e99df5355c8))
+* **store:** add GetCategories, DeleteCategory, and UpdateCategory store methods ([32038ce](https://github.com/Davidmuthee12/EazyMarket-backend/commit/32038ce0397ed8dde52762c029ad5ac9dffc97ba))
+* **store:** add vendor profile retrieval in vendor.go ([a940f1a](https://github.com/Davidmuthee12/EazyMarket-backend/commit/a940f1a58ce2a8b12c89bf263148c253048d81d4))
+* **store:** extend Category interface with GetCategories, DeleteCategory, and UpdateCategory ([1a42e8c](https://github.com/Davidmuthee12/EazyMarket-backend/commit/1a42e8c908b3feb1375ade0046d15570cf876dfd))
+* **store:** implement category store operations in category.go ([7b3fe07](https://github.com/Davidmuthee12/EazyMarket-backend/commit/7b3fe074a2d8ad1ea27214fef79130a693f42af6))
+
 ## [1.3.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.2.0...v1.3.0) (2026-05-07)
 
 
