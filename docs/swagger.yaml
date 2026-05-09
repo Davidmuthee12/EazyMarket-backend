@@ -671,6 +671,33 @@ paths:
       summary: Create a product
       tags:
       - products
+  /vendor/products/{productID}:
+    get:
+      description: Retrieves a product by ID.
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product retrieved
+          schema:
+            $ref: '#/definitions/store.Products'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get product by ID
+      tags:
+      - products
   /vendor/profile:
     get:
       description: Retrieves the vendor profile for the authenticated vendor user
