@@ -161,3 +161,77 @@ func (app *application) getProductByIDHandler(w http.ResponseWriter, r *http.Req
 		app.internalServerError(w, r, err)
 	}
 }
+
+// UpdateProduct godoc
+//
+//	@Summary		Update a product
+//	@Description	Updates an existing product for the authenticated vendor.
+//	@Tags			products
+//	@Accept			json
+//	@Produce		json
+//	@Param			productID	path		string			true	"Product ID"
+//	@Param			payload		body		ProductPayload	true	"Product update payload"
+//	@Success		200			{object}	store.Products	"Product updated"
+//	@Failure		400			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/vendor/products/{productID} [put]
+func (app *application) updateProductHandler(w http.ResponseWriter, r *http.Request) {
+	productID := chi.URLParam(r, "productID")
+	if _, err := uuid.Parse(productID); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	vendor := getUserFromCtx(r)
+	if vendor == nil {
+		app.internalServerError(w, r, nil)
+		return
+	}
+
+	var payload ProductPayload
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(&payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	product := &store.Products{
+		ID:             productID,
+		Name:           payload.Name,
+		Slug:           payload.Slug,
+		Description:    payload.Description,
+		Category_ID:    payload.Category_ID,
+		Price:          payload.Price,
+		Compare_Price:  payload.Compare_Price,
+		Stock_Quantity: payload.Stock_Quantity,
+		SKU:            payload.SKU,
+		Weight:         payload.Weight,
+	}
+
+	ctx := r.Context()
+
+	err := app.store.Product.UpdateProduct(ctx, product, vendor.UUID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.badRequestResponse(w, r, err)
+			return
+		case store.ErrDuplicateProductName, store.ErrDuplicateProductSlug:
+			app.badRequestResponse(w, r, err)
+			return
+		default:
+			app.internalServerError(w, r, err)
+			return
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, product); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
