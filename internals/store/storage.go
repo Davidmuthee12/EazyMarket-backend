@@ -46,6 +46,7 @@ type Storage struct {
 
 	Product interface {
 		CreateProduct(ctx context.Context, product *Products, vendorID string) error
+		GetAllProduct(ctx context.Context, vendorID string) ([]Products, error)
 	}
 }
 
