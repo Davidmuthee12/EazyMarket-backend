@@ -25,6 +25,38 @@ definitions:
     required:
     - email
     type: object
+  main.ProductPayload:
+    properties:
+      category_id:
+        type: string
+      compare_price:
+        type: integer
+      description:
+        maxLength: 250
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      price:
+        type: integer
+      sku:
+        maxLength: 50
+        type: string
+      slug:
+        maxLength: 100
+        type: string
+      stock_quantity:
+        type: integer
+      weight:
+        type: integer
+    required:
+    - description
+    - name
+    - price
+    - sku
+    - slug
+    - stock_quantity
+    type: object
   main.RegisterUserPayload:
     properties:
       email:
@@ -110,6 +142,35 @@ definitions:
         type: string
       slug:
         type: string
+    type: object
+  store.Products:
+    properties:
+      category_id:
+        type: string
+      compare_price:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: integer
+      sku:
+        type: string
+      slug:
+        type: string
+      status:
+        type: string
+      stock_quantity:
+        type: integer
+      updated_at:
+        type: string
+      weight:
+        type: integer
     type: object
   store.Role:
     properties:
@@ -558,6 +619,36 @@ paths:
       summary: Activates/Register a user
       tags:
       - users
+  /vendor/products:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new product for the authenticated vendor.
+      parameters:
+      - description: Product payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.ProductPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Product created
+          schema:
+            $ref: '#/definitions/store.Products'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create a product
+      tags:
+      - products
   /vendor/profile:
     get:
       description: Retrieves the vendor profile for the authenticated vendor user
