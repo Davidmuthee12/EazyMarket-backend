@@ -14,19 +14,19 @@ var (
 )
 
 type Products struct {
-	ID             string `json:"id"`
-	Name           string `json:"name"`
-	Slug           string `json:"slug"`
-	Description    string `json:"description"`
-	Category_ID    string `json:"category_id"`
-	Price          int64  `json:"price"`
-	Compare_Price  int64  `json:"compare_price"`
-	Stock_Quantity int64  `json:"stock_quantity"`
-	SKU            string `json:"sku"`
-	Status         string `json:"status"`
-	Weight         int64  `json:"weight"`
-	Created_At     string `json:"created_at"`
-	Update_At      string `json:"updated_at"`
+	ID             string  `json:"id"`
+	Name           string  `json:"name"`
+	Slug           string  `json:"slug"`
+	Description    string  `json:"description"`
+	Category_ID    string  `json:"category_id"`
+	Price          float64 `json:"price"`
+	Compare_Price  float64 `json:"compare_price"`
+	Stock_Quantity int     `json:"stock_quantity"`
+	SKU            string  `json:"sku"`
+	Status         string  `json:"status"`
+	Weight         float64 `json:"weight"`
+	Created_At     string  `json:"created_at"`
+	Update_At      string  `json:"updated_at"`
 }
 
 type ProductStore struct {
@@ -87,4 +87,74 @@ func (s *ProductStore) CreateProduct(ctx context.Context, product *Products, ven
 	}
 
 	return nil
+}
+
+func (s *ProductStore) GetAllProduct(ctx context.Context, vendorID string) ([]Products, error) {
+	query := `
+		SELECT
+			id,
+			name,
+			slug,
+			description,
+			COALESCE(category_id::text, ''),
+			price,
+			COALESCE(compare_price, 0),
+			stock_quantity,
+			sku,
+			status,
+			COALESCE(weight, 0),
+			created_at,
+			updated_at
+		FROM products
+		WHERE vendor_id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(
+		ctx,
+		query,
+		vendorID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	products := []Products{}
+	for rows.Next() {
+		var product Products
+
+		err := rows.Scan(
+			&product.ID,
+			&product.Name,
+			&product.Slug,
+			&product.Description,
+			&product.Category_ID,
+			&product.Price,
+			&product.Compare_Price,
+			&product.Stock_Quantity,
+			&product.SKU,
+			&product.Status,
+			&product.Weight,
+			&product.Created_At,
+			&product.Update_At,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		products = append(products, product)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(products) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return products, nil
 }
