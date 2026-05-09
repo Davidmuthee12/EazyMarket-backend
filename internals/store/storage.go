@@ -43,6 +43,10 @@ type Storage struct {
 		DeleteCategory(ctx context.Context, categoryID string) error
 		UpdateCategory(ctx context.Context, category *Category) error
 	}
+
+	Product interface {
+		CreateProduct(ctx context.Context, product *Products, vendorID string) error
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
@@ -51,6 +55,7 @@ func NewStorage(db *sql.DB) Storage {
 		Roles:    &RoleStore{db},
 		Vendor:   &VenderStore{db},
 		Category: &CategoryStore{db},
+		Product:  &ProductStore{db},
 	}
 }
 
