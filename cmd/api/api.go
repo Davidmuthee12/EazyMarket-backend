@@ -146,6 +146,7 @@ func (app *application) mount() http.Handler {
 			r.Post("/profile", app.vendorProfileHandler)
 			r.Get("/profile", app.getVendorProfileHandler)
 			r.Post("/products", app.postProductsHandler)
+			r.Get("/products", app.getAllProducts)
 		})
 
 	})
