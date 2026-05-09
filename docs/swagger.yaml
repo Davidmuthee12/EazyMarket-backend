@@ -30,7 +30,7 @@ definitions:
       category_id:
         type: string
       compare_price:
-        type: integer
+        type: number
       description:
         maxLength: 250
         type: string
@@ -38,7 +38,7 @@ definitions:
         maxLength: 100
         type: string
       price:
-        type: integer
+        type: number
       sku:
         maxLength: 50
         type: string
@@ -48,7 +48,7 @@ definitions:
       stock_quantity:
         type: integer
       weight:
-        type: integer
+        type: number
     required:
     - description
     - name
@@ -148,7 +148,7 @@ definitions:
       category_id:
         type: string
       compare_price:
-        type: integer
+        type: number
       created_at:
         type: string
       description:
@@ -158,7 +158,7 @@ definitions:
       name:
         type: string
       price:
-        type: integer
+        type: number
       sku:
         type: string
       slug:
@@ -170,7 +170,7 @@ definitions:
       updated_at:
         type: string
       weight:
-        type: integer
+        type: number
     type: object
   store.Role:
     properties:
@@ -620,6 +620,28 @@ paths:
       tags:
       - users
   /vendor/products:
+    get:
+      description: Retrieves all products for the authenticated vendor.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Products retrieved
+          schema:
+            items:
+              $ref: '#/definitions/store.Products'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get all products
+      tags:
+      - products
     post:
       consumes:
       - application/json

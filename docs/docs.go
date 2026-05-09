@@ -608,6 +608,40 @@ const docTemplate = `{
             }
         },
         "/vendor/products": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all products for the authenticated vendor.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Get all products",
+                "responses": {
+                    "200": {
+                        "description": "Products retrieved",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/store.Products"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -785,7 +819,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "compare_price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "description": {
                     "type": "string",
@@ -796,7 +830,7 @@ const docTemplate = `{
                     "maxLength": 100
                 },
                 "price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "sku": {
                     "type": "string",
@@ -810,7 +844,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "weight": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },
@@ -944,7 +978,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "compare_price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "created_at": {
                     "type": "string"
@@ -959,7 +993,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "sku": {
                     "type": "string"
@@ -977,7 +1011,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "weight": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },

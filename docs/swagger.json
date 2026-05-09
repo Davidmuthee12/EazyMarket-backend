@@ -600,6 +600,40 @@
             }
         },
         "/vendor/products": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all products for the authenticated vendor.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Get all products",
+                "responses": {
+                    "200": {
+                        "description": "Products retrieved",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/store.Products"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -777,7 +811,7 @@
                     "type": "string"
                 },
                 "compare_price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "description": {
                     "type": "string",
@@ -788,7 +822,7 @@
                     "maxLength": 100
                 },
                 "price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "sku": {
                     "type": "string",
@@ -802,7 +836,7 @@
                     "type": "integer"
                 },
                 "weight": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },
@@ -936,7 +970,7 @@
                     "type": "string"
                 },
                 "compare_price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "created_at": {
                     "type": "string"
@@ -951,7 +985,7 @@
                     "type": "string"
                 },
                 "price": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "sku": {
                     "type": "string"
@@ -969,7 +1003,7 @@
                     "type": "string"
                 },
                 "weight": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },
