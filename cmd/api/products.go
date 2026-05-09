@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/Davidmuthee12/eazymarket/internals/store"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type ProductPayload struct {
@@ -118,6 +120,44 @@ func (app *application) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, products); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+// GetProductByID godoc
+//
+//	@Summary		Get product by ID
+//	@Description	Retrieves a product by ID.
+//	@Tags			products
+//	@Produce		json
+//	@Param			productID	path		string			true	"Product ID"
+//	@Success		200			{object}	store.Products	"Product retrieved"
+//	@Failure		400			{object}	error
+//	@Failure		500			{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/vendor/products/{productID} [get]
+func (app *application) getProductByIDHandler(w http.ResponseWriter, r *http.Request) {
+	productID := chi.URLParam(r, "productID")
+	if _, err := uuid.Parse(productID); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+
+	product, err := app.store.Product.GetProductByUUID(ctx, productID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.badRequestResponse(w, r, err)
+			return
+		default:
+			app.internalServerError(w, r, err)
+			return
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, product); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
