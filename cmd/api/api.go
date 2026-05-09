@@ -148,6 +148,7 @@ func (app *application) mount() http.Handler {
 			r.Post("/products", app.postProductsHandler)
 			r.Get("/products", app.getAllProducts)
 			r.Get("/products/{productID}", app.getProductByIDHandler)
+			r.Put("/products/{productID}", app.updateProductHandler)
 
 		})
 
