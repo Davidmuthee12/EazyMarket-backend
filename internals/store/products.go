@@ -215,3 +215,88 @@ func (s *ProductStore) GetProductByUUID(ctx context.Context, productID string) (
 	return product, nil
 
 }
+
+func (s *ProductStore) UpdateProduct(ctx context.Context, product *Products, vendorID string) error {
+	query := `
+		UPDATE products
+		SET
+			name = $3,
+			slug = $4,
+			description = $5,
+			category_id = NULLIF($6, '')::uuid,
+			price = $7,
+			compare_price = $8,
+			stock_quantity = $9,
+			sku = $10,
+			weight = $11,
+			updated_at = now()
+		WHERE id = $1 AND vendor_id = $2
+		RETURNING
+			id,
+			name,
+			slug,
+			description,
+			COALESCE(category_id::text, ''),
+			price,
+			COALESCE(compare_price, 0),
+			stock_quantity,
+			sku,
+			status,
+			COALESCE(weight, 0),
+			created_at,
+			updated_at
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		product.ID,
+		vendorID,
+		product.Name,
+		product.Slug,
+		product.Description,
+		product.Category_ID,
+		product.Price,
+		product.Compare_Price,
+		product.Stock_Quantity,
+		product.SKU,
+		product.Weight,
+	).Scan(
+		&product.ID,
+		&product.Name,
+		&product.Slug,
+		&product.Description,
+		&product.Category_ID,
+		&product.Price,
+		&product.Compare_Price,
+		&product.Stock_Quantity,
+		&product.SKU,
+		&product.Status,
+		&product.Weight,
+		&product.Created_At,
+		&product.Update_At,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrNotFound
+		default:
+			var pqErr *pq.Error
+			if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+				switch pqErr.Constraint {
+				case "products_name_key":
+					return ErrDuplicateProductName
+				case "products_slug_key":
+					return ErrDuplicateProductSlug
+				}
+			}
+			return err
+		}
+	}
+
+	return nil
+}
