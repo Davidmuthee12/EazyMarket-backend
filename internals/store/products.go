@@ -158,3 +158,60 @@ func (s *ProductStore) GetAllProduct(ctx context.Context, vendorID string) ([]Pr
 
 	return products, nil
 }
+
+func (s *ProductStore) GetProductByUUID(ctx context.Context, productID string) (*Products, error) {
+	query := `
+		SELECT
+			id,
+			name,
+			slug,
+			description,
+			COALESCE(category_id::text, ''),
+			price,
+			COALESCE(compare_price, 0),
+			stock_quantity,
+			sku,
+			status,
+			COALESCE(weight, 0),
+			created_at,
+			updated_at
+		FROM products
+		WHERE id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	product := &Products{}
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		productID,
+	).Scan(
+		&product.ID,
+		&product.Name,
+		&product.Slug,
+		&product.Description,
+		&product.Category_ID,
+		&product.Price,
+		&product.Compare_Price,
+		&product.Stock_Quantity,
+		&product.SKU,
+		&product.Status,
+		&product.Weight,
+		&product.Created_At,
+		&product.Update_At,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return product, nil
+
+}
