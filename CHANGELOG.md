@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.5.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.4.0...v1.5.0) (2026-05-09)
+
+
+### Features
+
+* **api:** add vendor products route ([11c9edc](https://github.com/Davidmuthee12/EazyMarket-backend/commit/11c9edca654a5351f8572490d4f7313cce74a082))
+* **api:** expose product detail route ([cf009a4](https://github.com/Davidmuthee12/EazyMarket-backend/commit/cf009a4115e1ac548789eab09af772a954e9e38e))
+* **api:** expose product update route ([e412874](https://github.com/Davidmuthee12/EazyMarket-backend/commit/e412874022205e1e545ff7a105f43bb4380ede44))
+* **api:** expose vendor product listing route ([bff40e0](https://github.com/Davidmuthee12/EazyMarket-backend/commit/bff40e03d13e34a1036433bdcf0bb1aa436b9ed9))
+* **db:** add product tables migration ([385950f](https://github.com/Davidmuthee12/EazyMarket-backend/commit/385950f3fb2be13a5561c471f19165e75a03c9d9))
+* **products:** add create product handler ([40f1459](https://github.com/Davidmuthee12/EazyMarket-backend/commit/40f1459ecdad5946727a1f08a7fda08ed15fea74))
+* **products:** add product store creation ([027363f](https://github.com/Davidmuthee12/EazyMarket-backend/commit/027363f448e4ec3df05b30ece7b050a7060ed416))
+* **products:** fetch product details by id ([2ff36ef](https://github.com/Davidmuthee12/EazyMarket-backend/commit/2ff36ef4ff004c6ffbbb4c515fb7150f564413f1))
+* **products:** handle vendor product listing ([52d38bf](https://github.com/Davidmuthee12/EazyMarket-backend/commit/52d38bfd557e46b74b80d216068649fbdc1d0a34))
+* **products:** handle vendor product updates ([2ccdc12](https://github.com/Davidmuthee12/EazyMarket-backend/commit/2ccdc12874591f7f0c08a68e4dca6badc5bc6528))
+* **products:** update vendor-owned products ([5e31c98](https://github.com/Davidmuthee12/EazyMarket-backend/commit/5e31c980bd7c38c638bc82c99d89155f36c3ae79))
+* **store:** expose product detail lookup ([d7dec55](https://github.com/Davidmuthee12/EazyMarket-backend/commit/d7dec55b9d4792b016e99d7a454236ab045c3ad0))
+* **store:** expose product listing contract ([2c1175a](https://github.com/Davidmuthee12/EazyMarket-backend/commit/2c1175a80d58474b81d4d83e2021f2215d0f96a4))
+* **store:** expose product update contract ([3b143b0](https://github.com/Davidmuthee12/EazyMarket-backend/commit/3b143b06790a24871a793dd90e8fe9190bb52f15))
+* **store:** register product storage ([eafb608](https://github.com/Davidmuthee12/EazyMarket-backend/commit/eafb608b08dcbd26c912bf1396afccab72554793))
+
+
+### Bug Fixes
+
+* **products:** query vendor products correctly ([58a9811](https://github.com/Davidmuthee12/EazyMarket-backend/commit/58a9811aea11c1b5c97aa0938f86924712c693ef))
+
 ## [1.4.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.3.0...v1.4.0) (2026-05-08)
 
 
