@@ -698,6 +698,43 @@ paths:
       summary: Get product by ID
       tags:
       - products
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing product for the authenticated vendor.
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      - description: Product update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.ProductPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product updated
+          schema:
+            $ref: '#/definitions/store.Products'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update a product
+      tags:
+      - products
   /vendor/profile:
     get:
       description: Retrieves the vendor profile for the authenticated vendor user
