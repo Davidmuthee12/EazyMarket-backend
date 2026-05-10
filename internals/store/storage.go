@@ -51,6 +51,14 @@ type Storage struct {
 		UpdateProduct(ctx context.Context, product *Products, vendorID string) error
 		DeleteProduct(ctx context.Context, productID string, vendorID string) error
 	}
+
+	Cart interface {
+		AddItem(ctx context.Context, userID, productID string, quantity int) (*CartItem, error)
+		GetCart(ctx context.Context, userID string) (*Cart, error)
+		UpdateItem(ctx context.Context, userID, productID string, quantity int) (*CartItem, error)
+		RemoveItem(ctx context.Context, userID, productID string) error
+		ClearCart(ctx context.Context, userID string) error
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
@@ -60,6 +68,7 @@ func NewStorage(db *sql.DB) Storage {
 		Vendor:   &VenderStore{db},
 		Category: &CategoryStore{db},
 		Product:  &ProductStore{db},
+		Cart:     &CartStore{db},
 	}
 }
 
