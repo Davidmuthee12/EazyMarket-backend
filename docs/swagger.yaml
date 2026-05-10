@@ -34,6 +34,15 @@ definitions:
     required:
     - quantity
     type: object
+  main.CreateOrderPayload:
+    properties:
+      notes:
+        maxLength: 500
+        type: string
+      shipping_address:
+        additionalProperties: {}
+        type: object
+    type: object
   main.CreateUserTokenPayload:
     properties:
       email:
@@ -92,6 +101,19 @@ definitions:
     - email
     - password
     - username
+    type: object
+  main.UpdateOrderStatusPayload:
+    properties:
+      status:
+        enum:
+        - confirmed
+        - shipped
+        - delivered
+        - cancelled
+        - refunded
+        type: string
+    required:
+    - status
     type: object
   main.UpdateVendorProfile:
     properties:
@@ -201,6 +223,52 @@ definitions:
         type: string
       slug:
         type: string
+    type: object
+  store.Order:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/store.OrderItem'
+        type: array
+      notes:
+        type: string
+      shipping_address:
+        type: object
+      status:
+        type: string
+      total_amount:
+        type: number
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  store.OrderItem:
+    properties:
+      commission_amt:
+        type: number
+      id:
+        type: string
+      order_id:
+        type: string
+      product:
+        $ref: '#/definitions/store.Products'
+      product_id:
+        type: string
+      quantity:
+        type: integer
+      subtotal:
+        type: number
+      unit_price:
+        type: number
+      vendor_id:
+        type: string
+      vendor_payout:
+        type: number
     type: object
   store.Products:
     properties:
@@ -694,6 +762,118 @@ paths:
       summary: Health check
       tags:
       - health
+  /orders:
+    get:
+      description: Retrieves the authenticated user's orders.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Orders retrieved
+          schema:
+            items:
+              $ref: '#/definitions/store.Order'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get orders
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Creates an order from the authenticated user's active cart and
+        clears the cart.
+      parameters:
+      - description: Order payload
+        in: body
+        name: payload
+        schema:
+          $ref: '#/definitions/main.CreateOrderPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Order created
+          schema:
+            $ref: '#/definitions/store.Order'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create an order
+      tags:
+      - orders
+  /orders/{orderID}:
+    get:
+      description: Retrieves one order for the authenticated user.
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order retrieved
+          schema:
+            $ref: '#/definitions/store.Order'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get order by ID
+      tags:
+      - orders
+  /orders/{orderID}/cancel:
+    put:
+      description: Cancels a pending or confirmed order for the authenticated user.
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order cancelled
+          schema:
+            $ref: '#/definitions/store.Order'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Cancel an order
+      tags:
+      - orders
   /users/:
     get:
       description: Fetches all users
@@ -804,6 +984,100 @@ paths:
       summary: Activates/Register a user
       tags:
       - users
+  /vendor/orders:
+    get:
+      description: Retrieves orders containing products owned by the authenticated
+        vendor.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Vendor orders retrieved
+          schema:
+            items:
+              $ref: '#/definitions/store.Order'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get vendor orders
+      tags:
+      - orders
+  /vendor/orders/{orderID}:
+    get:
+      description: Retrieves one order containing products owned by the authenticated
+        vendor.
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Vendor order retrieved
+          schema:
+            $ref: '#/definitions/store.Order'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get vendor order by ID
+      tags:
+      - orders
+  /vendor/orders/{orderID}/status:
+    put:
+      consumes:
+      - application/json
+      description: Updates the status of an order containing products owned by the
+        authenticated vendor.
+      parameters:
+      - description: Order ID
+        in: path
+        name: orderID
+        required: true
+        type: string
+      - description: Order status payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.UpdateOrderStatusPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order status updated
+          schema:
+            $ref: '#/definitions/store.Order'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update vendor order status
+      tags:
+      - orders
   /vendor/products:
     get:
       description: Retrieves all products for the authenticated vendor.
