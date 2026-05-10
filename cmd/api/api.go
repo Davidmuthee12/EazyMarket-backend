@@ -149,9 +149,8 @@ func (app *application) mount() http.Handler {
 			r.Get("/products", app.getAllProducts)
 			r.Get("/products/{productID}", app.getProductByIDHandler)
 			r.Put("/products/{productID}", app.updateProductHandler)
-
+			r.Delete("/products/{productID}", app.deleteProductHandler)
 		})
-
 	})
 
 	return r
