@@ -10,6 +10,7 @@ import (
 var (
 	ErrNotFound          = errors.New("record not found")
 	ErrConflict          = errors.New("resource already exists")
+	ErrEmptyCart         = errors.New("cart is empty")
 	QueryTimeoutDuration = time.Second * 5
 )
 
@@ -59,6 +60,16 @@ type Storage struct {
 		RemoveItem(ctx context.Context, userID, productID string) error
 		ClearCart(ctx context.Context, userID string) error
 	}
+
+	Order interface {
+		CreateFromCart(ctx context.Context, userID string, shippingAddress []byte, notes string) (*Order, error)
+		GetAll(ctx context.Context, userID string) ([]Order, error)
+		GetByID(ctx context.Context, userID, orderID string) (*Order, error)
+		Cancel(ctx context.Context, userID, orderID string) (*Order, error)
+		GetVendorOrders(ctx context.Context, vendorID string) ([]Order, error)
+		GetVendorOrderByID(ctx context.Context, vendorID, orderID string) (*Order, error)
+		UpdateVendorOrderStatus(ctx context.Context, vendorID, orderID, status string) (*Order, error)
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
@@ -69,6 +80,7 @@ func NewStorage(db *sql.DB) Storage {
 		Category: &CategoryStore{db},
 		Product:  &ProductStore{db},
 		Cart:     &CartStore{db},
+		Order:    &OrderStore{db},
 	}
 }
 
