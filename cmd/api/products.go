@@ -235,3 +235,47 @@ func (app *application) updateProductHandler(w http.ResponseWriter, r *http.Requ
 		app.internalServerError(w, r, err)
 	}
 }
+
+// DeleteProduct godoc
+//
+//	@Summary		Delete a product
+//	@Description	Deletes an existing product for the authenticated vendor.
+//	@Tags			products
+//	@Param			productID	path		string	true	"Product ID"
+//	@Success		200			{object}	nil		"Product deleted"
+//	@Failure		400			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/vendor/products/{productID} [delete]
+func (app *application) deleteProductHandler(w http.ResponseWriter, r *http.Request) {
+	productID := chi.URLParam(r, "productID")
+	if _, err := uuid.Parse(productID); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	vendor := getUserFromCtx(r)
+	if vendor == nil {
+		app.internalServerError(w, r, nil)
+		return
+	}
+
+	ctx := r.Context()
+
+	err := app.store.Product.DeleteProduct(ctx, productID, vendor.UUID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.badRequestResponse(w, r, err)
+			return
+		default:
+			app.internalServerError(w, r, err)
+			return
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
