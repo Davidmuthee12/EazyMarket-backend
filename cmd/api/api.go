@@ -150,6 +150,9 @@ func (app *application) mount() http.Handler {
 			r.Get("/products/{productID}", app.getProductByIDHandler)
 			r.Put("/products/{productID}", app.updateProductHandler)
 			r.Delete("/products/{productID}", app.deleteProductHandler)
+			r.Get("/orders", app.getVendorOrdersHandler)
+			r.Get("/orders/{orderID}", app.getVendorOrderByIDHandler)
+			r.Put("/orders/{orderID}/status", app.updateVendorOrderStatusHandler)
 		})
 
 		r.Route("/cart", func(r chi.Router) {
@@ -159,6 +162,14 @@ func (app *application) mount() http.Handler {
 			r.Put("/items/{productID}", app.updateCartItemHandler)
 			r.Delete("/items/{productID}", app.removeCartItemHandler)
 			r.Delete("/", app.clearCartHandler)
+		})
+
+		r.Route("/orders", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+			r.Post("/", app.createOrderHandler)
+			r.Get("/", app.getOrdersHandler)
+			r.Get("/{orderID}", app.getOrderByIDHandler)
+			r.Put("/{orderID}/cancel", app.cancelOrderHandler)
 		})
 	})
 
