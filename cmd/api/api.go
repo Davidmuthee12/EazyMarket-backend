@@ -151,6 +151,15 @@ func (app *application) mount() http.Handler {
 			r.Put("/products/{productID}", app.updateProductHandler)
 			r.Delete("/products/{productID}", app.deleteProductHandler)
 		})
+
+		r.Route("/cart", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+			r.Get("/", app.getCartHandler)
+			r.Post("/items", app.addCartItemHandler)
+			r.Put("/items/{productID}", app.updateCartItemHandler)
+			r.Delete("/items/{productID}", app.removeCartItemHandler)
+			r.Delete("/", app.clearCartHandler)
+		})
 	})
 
 	return r
