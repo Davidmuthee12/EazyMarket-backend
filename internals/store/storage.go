@@ -49,6 +49,7 @@ type Storage struct {
 		GetAllProduct(ctx context.Context, vendorID string) ([]Products, error)
 		GetProductByUUID(ctx context.Context, productID string) (*Products, error)
 		UpdateProduct(ctx context.Context, product *Products, vendorID string) error
+		DeleteProduct(ctx context.Context, productID string, vendorID string) error
 	}
 }
 
