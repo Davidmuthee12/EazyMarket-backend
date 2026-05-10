@@ -300,3 +300,26 @@ func (s *ProductStore) UpdateProduct(ctx context.Context, product *Products, ven
 
 	return nil
 }
+
+func (s *ProductStore) DeleteProduct(ctx context.Context, productID string, vendorID string) error {
+	query := `
+		DELETE FROM products
+		WHERE id = $1 AND vendor_id = $2
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	_, err := s.db.ExecContext(
+		ctx,
+		query,
+		productID,
+		vendorID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
