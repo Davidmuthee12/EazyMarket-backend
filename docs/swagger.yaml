@@ -672,6 +672,31 @@ paths:
       tags:
       - products
   /vendor/products/{productID}:
+    delete:
+      description: Deletes an existing product for the authenticated vendor.
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Product deleted
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a product
+      tags:
+      - products
     get:
       description: Retrieves a product by ID.
       parameters:
