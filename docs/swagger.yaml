@@ -15,6 +15,25 @@ definitions:
     - name
     - slug
     type: object
+  main.CartItemPayload:
+    properties:
+      product_id:
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  main.CartQuantityPayload:
+    properties:
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - quantity
+    type: object
   main.CreateUserTokenPayload:
     properties:
       email:
@@ -128,6 +147,46 @@ definitions:
       token:
         type: string
       username:
+        type: string
+    type: object
+  store.Cart:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/store.CartItem'
+        type: array
+      status:
+        type: string
+      subtotal:
+        type: number
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  store.CartItem:
+    properties:
+      cart_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      product:
+        $ref: '#/definitions/store.Products'
+      product_id:
+        type: string
+      quantity:
+        type: integer
+      subtotal:
+        type: number
+      unit_price:
+        type: number
+      updated_at:
         type: string
     type: object
   store.Category:
@@ -489,6 +548,132 @@ paths:
       summary: Register a user
       tags:
       - authentication
+  /cart:
+    delete:
+      description: Removes all items from the authenticated user's active cart.
+      responses:
+        "200":
+          description: Cart cleared
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Clear cart
+      tags:
+      - cart
+    get:
+      description: Retrieves the authenticated user's active cart.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cart retrieved
+          schema:
+            $ref: '#/definitions/store.Cart'
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get cart
+      tags:
+      - cart
+  /cart/items:
+    post:
+      consumes:
+      - application/json
+      description: Adds a product to the authenticated user's active cart. Creates
+        the cart automatically if it does not exist.
+      parameters:
+      - description: Cart item payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CartItemPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Cart item added
+          schema:
+            $ref: '#/definitions/store.CartItem'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Add item to cart
+      tags:
+      - cart
+  /cart/items/{productID}:
+    delete:
+      description: Removes a product from the authenticated user's active cart.
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Cart item removed
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Remove cart item
+      tags:
+      - cart
+    put:
+      consumes:
+      - application/json
+      description: Updates the quantity of a product in the authenticated user's active
+        cart.
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      - description: Cart item quantity payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CartQuantityPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cart item updated
+          schema:
+            $ref: '#/definitions/store.CartItem'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update cart item
+      tags:
+      - cart
   /health:
     get:
       consumes:
