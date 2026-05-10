@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.6.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.5.0...v1.6.0) (2026-05-10)
+
+
+### Features
+
+* **api:** add cart endpoints ([c6b90ff](https://github.com/Davidmuthee12/EazyMarket-backend/commit/c6b90fff15e08b32fa0e5dc9295b214212ed1234))
+* **api:** add order endpoints ([bae8f99](https://github.com/Davidmuthee12/EazyMarket-backend/commit/bae8f996edbc1836697c2e911547cc8f18a8fde0))
+* **api:** adds new delete product handler ([e25f2e5](https://github.com/Davidmuthee12/EazyMarket-backend/commit/e25f2e5a7c4f14c48fc80cd714c20783c6bdc91e))
+* **api:** adds new vendor delete product endpoint ([1387142](https://github.com/Davidmuthee12/EazyMarket-backend/commit/1387142ae6389bce6cc268da0a485ba0becfd247))
+* **cart:** add cart store operations ([c4bc151](https://github.com/Davidmuthee12/EazyMarket-backend/commit/c4bc1515f8bb16ae3aa29ff6dbeb0bccb73ced21))
+* **db:** add cart persistence migrations ([44c3888](https://github.com/Davidmuthee12/EazyMarket-backend/commit/44c38883d5e91a0800f11165360c0beb9afeff30))
+* **db:** add order persistence migrations ([47cee4a](https://github.com/Davidmuthee12/EazyMarket-backend/commit/47cee4a0c896f5efb3433369663859550dde5008))
+* **DB:** adds db query to delete vendor products ([569d36a](https://github.com/Davidmuthee12/EazyMarket-backend/commit/569d36a0f3b1a33fc681517dbb1c26574b08dc77))
+* **orders:** add order store operations ([45e7c76](https://github.com/Davidmuthee12/EazyMarket-backend/commit/45e7c76f651dcd68093f23a401309cc85dd65daa))
+* **store:** registers the delete handler in store ([952490e](https://github.com/Davidmuthee12/EazyMarket-backend/commit/952490e12e04070b4457959eacdab2677ebc71d4))
+
+
+### Bug Fixes
+
+* **api:** handle nil internal server errors ([725a81d](https://github.com/Davidmuthee12/EazyMarket-backend/commit/725a81d0ae17176ffc853650eb3891d2cbf91f0b))
+
 ## [1.5.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.4.0...v1.5.0) (2026-05-09)
 
 
