@@ -131,6 +131,8 @@ func (app *application) mount() http.Handler {
 			r.Use(app.AuthTokenMiddleware)
 			r.Use(app.RequireRole("admin"))
 			r.Get("/", app.getAllUsersHandlers)
+			r.Put("/users/{userUUID}/suspend", app.suspendUserHandler)
+			r.Put("/users/{userUUID}/unsuspend", app.unsuspendUserHandler)
 			r.Get("/vendor-request", app.vendorRequestHandler)
 			r.Put("/vendor-request/{userUUID}/approve", app.approveVendorHandler)
 			r.Put("/vendor-request/{userUUID}/reject", app.rejectVendorHandler)
@@ -143,6 +145,7 @@ func (app *application) mount() http.Handler {
 		r.Route("/vendor", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
 			r.Use(app.RequireRole("vendor"))
+			r.Use(app.RequireActiveVendor)
 			r.Post("/profile", app.vendorProfileHandler)
 			r.Get("/profile", app.getVendorProfileHandler)
 			r.Post("/products", app.postProductsHandler)
