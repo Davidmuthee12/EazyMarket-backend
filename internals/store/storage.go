@@ -28,6 +28,7 @@ type Storage struct {
 		GetUpgradeRequests(context.Context) ([]*User, error)
 		UpdateRoleRequest(ctx context.Context, userID, reviewerID string) error
 		RejectRequest(ctx context.Context, userID, reviewerID string) error
+		SetStatus(ctx context.Context, userUUID, status string) error
 	}
 	Roles interface {
 		GetByName(context.Context, string) (*Role, error)
@@ -36,6 +37,7 @@ type Storage struct {
 	Vendor interface {
 		CreateVendorProfile(ctx context.Context, Vendor *Vendor, userUUID string) error
 		GetVendorByUUID(ctx context.Context, userID string) (*Vendor, error)
+		SetStatus(ctx context.Context, userUUID, status string) error
 	}
 
 	Category interface {
