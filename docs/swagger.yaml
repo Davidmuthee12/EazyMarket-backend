@@ -49,9 +49,12 @@ definitions:
         maxLength: 255
         type: string
       password:
+        maxLength: 72
+        minLength: 3
         type: string
     required:
     - email
+    - password
     type: object
   main.ProductPayload:
     properties:
@@ -349,6 +352,8 @@ definitions:
         type: string
       logo_url:
         type: string
+      status:
+        type: string
       storename:
         type: string
       subdomain:
@@ -478,6 +483,84 @@ paths:
       summary: Update a category
       tags:
       - categories
+  /admin/users/{userUUID}/suspend:
+    put:
+      description: Suspends an active user account. Suspended users cannot remain
+        authorized after their cached user entry is invalidated.
+      parameters:
+      - description: user UUID
+        in: path
+        name: userUUID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Suspends a user
+      tags:
+      - admin
+  /admin/users/{userUUID}/unsuspend:
+    put:
+      description: Restores a suspended user account to active status and invalidates
+        their cached user entry.
+      parameters:
+      - description: user UUID
+        in: path
+        name: userUUID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Unsuspends a user
+      tags:
+      - admin
   /admin/vendor-request:
     get:
       description: Fetches all user requests to upgrade role to vendor
