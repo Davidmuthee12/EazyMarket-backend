@@ -106,9 +106,37 @@ func (app *application) RequireRole(requiredRole string) func(http.Handler) http
 				return
 			}
 
+			if user.Status == "suspended" {
+				app.forbiddenResponse(w, r)
+				return
+			}
+
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func (app *application) RequireActiveVendor(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := getUserFromCtx(r)
+		if user == nil {
+			app.unauthorizedErrorResponse(w, r, fmt.Errorf("unauthorized"))
+			return
+		}
+
+		vendor, err := app.store.Vendor.GetVendorByUUID(r.Context(), user.UUID)
+		if err != nil {
+			app.notFoundResponse(w, r, err)
+			return
+		}
+
+		if vendor.Status != "approved" {
+			app.forbiddenResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (app *application) checkRolePrecedence(ctx context.Context, user *store.User, roleName string) (bool, error) {
