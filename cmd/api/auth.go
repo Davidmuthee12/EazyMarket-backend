@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -131,7 +132,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 type CreateUserTokenPayload struct {
 	Email    string `json:"email" validate:"required,email,max=255"`
-	Password string `json:"password" validata:"required,min=3,max=72"`
+	Password string `json:"password" validate:"required,min=3,max=72"`
 }
 
 // createTokenHandler godoc
@@ -170,6 +171,17 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 		}
 		return
 	}
+
+	if err := user.Password.Matches(payload.Password); err != nil {
+		app.unauthorizedErrorResponse(w, r, err)
+		return
+	}
+
+	if user.Status == "suspended" {
+		app.badRequestResponse(w, r, errors.New("your account is currently under suspension"))
+		return
+	}
+
 	// generate the token -> add claims
 	claims := jwt.MapClaims{
 		"sub": user.UUID,
