@@ -22,6 +22,7 @@ type Vendor struct {
 	Banner_URL     string `json:"banner_url"`
 	Business_Email string `json:"business_email"`
 	Business_Phone string `json:"business_phone"`
+	Status         string `json:"status"`
 	Address        string `json:"address"`
 	CreatedAt      string `json:"created_at"`
 }
@@ -95,6 +96,7 @@ func (s *VenderStore) GetVendorByUUID(ctx context.Context, userID string) (*Vend
 			banner_url,
 			business_email,
 			business_phone,
+			status,
 			address,
 			created_at
 		FROM vendor_profiles
@@ -116,6 +118,7 @@ func (s *VenderStore) GetVendorByUUID(ctx context.Context, userID string) (*Vend
 		&vendor.Banner_URL,
 		&vendor.Business_Email,
 		&vendor.Business_Phone,
+		&vendor.Status,
 		&vendor.Address,
 		&vendor.CreatedAt,
 	)
@@ -130,4 +133,31 @@ func (s *VenderStore) GetVendorByUUID(ctx context.Context, userID string) (*Vend
 	}
 
 	return vendor, nil
+}
+
+func (s *VenderStore) SetStatus(ctx context.Context, userUUID, status string) error {
+	query := `
+		UPDATE vendor_profiles
+		SET status = $2, updated_at = NOW()
+		WHERE user_id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	res, err := s.db.ExecContext(ctx, query, userUUID, status)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
