@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/Davidmuthee12/eazymarket/internals/store"
@@ -285,4 +286,122 @@ func (app *application) rejectVendorHandler(w http.ResponseWriter, r *http.Reque
 func getUserFromCtx(r *http.Request) *store.User {
 	user, _ := r.Context().Value(userCtx).(*store.User)
 	return user
+}
+
+// SuspendUser godoc
+//
+//	@Summary		Suspends a user
+//	@Description	Suspends an active user account. Suspended users cannot remain authorized after their cached user entry is invalidated.
+//	@Tags			admin
+//	@Produce		json
+//	@Param			userUUID	path		string	true	"user UUID"
+//	@Success		200			{object}	map[string]string
+//	@Failure		400			{object}	error
+//	@Failure		401			{object}	error
+//	@Failure		403			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/admin/users/{userUUID}/suspend [put]
+func (app *application) suspendUserHandler(w http.ResponseWriter, r *http.Request) {
+	app.setUserStatusHandler(w, r, "suspended")
+}
+
+// UnsuspendUser godoc
+//
+//	@Summary		Unsuspends a user
+//	@Description	Restores a suspended user account to active status and invalidates their cached user entry.
+//	@Tags			admin
+//	@Produce		json
+//	@Param			userUUID	path		string	true	"user UUID"
+//	@Success		200			{object}	map[string]string
+//	@Failure		400			{object}	error
+//	@Failure		401			{object}	error
+//	@Failure		403			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/admin/users/{userUUID}/unsuspend [put]
+func (app *application) unsuspendUserHandler(w http.ResponseWriter, r *http.Request) {
+	app.setUserStatusHandler(w, r, "active")
+}
+
+func (app *application) setUserStatusHandler(w http.ResponseWriter, r *http.Request, status string) {
+	userUUID := chi.URLParam(r, "userUUID")
+	if _, err := uuid.Parse(userUUID); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	admin := getUserFromCtx(r)
+	if admin == nil {
+		app.unauthorizedErrorResponse(w, r, nil)
+		return
+	}
+
+	if admin.UUID == userUUID {
+		app.badRequestResponse(w, r, errors.New("You cannot change your own suspension status"))
+		return
+	}
+
+	ctx := r.Context()
+
+	targetUser, err := app.store.Users.GetByUUID(ctx, userUUID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+
+		return
+	}
+
+	if targetUser.Role.Name == "admin" {
+		app.forbiddenResponse(w, r)
+		return
+	}
+
+	if err := app.store.Users.SetStatus(ctx, userUUID, status); err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+
+		return
+	}
+
+	if targetUser.Role.Name == "vendor" {
+		vendorStatus := "approved"
+		if status == "suspended" {
+			vendorStatus = "suspended"
+		}
+
+		if err := app.store.Vendor.SetStatus(ctx, userUUID, vendorStatus); err != nil {
+			switch err {
+			case store.ErrNotFound:
+				app.notFoundResponse(w, r, err)
+			default:
+				app.internalServerError(w, r, err)
+			}
+
+			return
+		}
+	}
+
+	if app.config.redisCfg.enabled {
+		if err := app.cacheStorage.Users.Delete(ctx, userUUID); err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, map[string]string{
+		"status": status,
+	}); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
