@@ -53,6 +53,10 @@ func (p *password) Set(text string) error {
 	return nil
 }
 
+func (p *password) Matches(text string) error {
+	return bcrypt.CompareHashAndPassword(p.hash, []byte(text))
+}
+
 func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 	query := `
 		INSERT INTO users(username, email, phone, password, role_id)
@@ -134,7 +138,7 @@ func (s *UserStore) CreateUserInvitation(ctx context.Context, tx *sql.Tx, token 
 
 func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 	query := `
-		SELECT users.id, users.uuid, username, email, password, created_at, roles.*
+		SELECT users.id, users.uuid, username, email, password, created_at, users.status, roles.*
 		FROM users
 		JOIN roles ON  (users.role_id = roles.id)
 		WHERE users.id = $1 AND is_active = true
@@ -155,6 +159,7 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 		&user.Email,
 		&user.Password.hash,
 		&user.CreatedAt,
+		&user.Status,
 		&user.Role.ID,
 		&user.Role.Name,
 		&user.Role.Level,
@@ -175,7 +180,7 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 
 func (s *UserStore) GetByUUID(ctx context.Context, userUUID string) (*User, error) {
 	query := `
-		SELECT users.id, users.uuid, username, email, password, created_at, roles.*
+		SELECT users.id, users.uuid, username, email, password, created_at, users.status, roles.*
 		FROM users
 		JOIN roles ON  (users.role_id = roles.id)
 		WHERE users.uuid = $1 AND is_active = true
@@ -196,6 +201,7 @@ func (s *UserStore) GetByUUID(ctx context.Context, userUUID string) (*User, erro
 		&user.Email,
 		&user.Password.hash,
 		&user.CreatedAt,
+		&user.Status,
 		&user.Role.ID,
 		&user.Role.Name,
 		&user.Role.Level,
@@ -216,7 +222,7 @@ func (s *UserStore) GetByUUID(ctx context.Context, userUUID string) (*User, erro
 
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, uuid, username, email, password, created_at FROM users
+		SELECT id, uuid, username, email, password, created_at, status FROM users
 		WHERE email = $1 AND is_active = true
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -230,6 +236,7 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 		&user.Email,
 		&user.Password.hash,
 		&user.CreatedAt,
+		&user.Status,
 	)
 
 	if err != nil {
@@ -372,6 +379,7 @@ func (s *UserStore) GetAllUsers(ctx context.Context) ([]*User, error) {
 			COALESCE(u.avatar_url, ''),
 			u.role_id,
 			u.is_active,
+			u.status,
 			u.created_at,
 			r.id,
 			r.name,
@@ -402,6 +410,7 @@ func (s *UserStore) GetAllUsers(ctx context.Context) ([]*User, error) {
 			&user.Avatar_Url,
 			&user.RoleID,
 			&user.IsActive,
+			&user.Status,
 			&user.CreatedAt,
 			&user.Role.ID,
 			&user.Role.Name,
@@ -571,6 +580,33 @@ func (s *UserStore) RejectRequest(ctx context.Context, userID, reviewerID string
 	defer cancel()
 
 	res, err := s.db.ExecContext(ctx, query, userID, reviewerID)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func (s *UserStore) SetStatus(ctx context.Context, userUUID, status string) error {
+	query := `
+		UPDATE users
+		SET status = $2
+		WHERE uuid = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	res, err := s.db.ExecContext(ctx, query, userUUID, status)
 	if err != nil {
 		return err
 	}
