@@ -72,6 +72,13 @@ type Storage struct {
 		GetVendorOrderByID(ctx context.Context, vendorID, orderID string) (*Order, error)
 		UpdateVendorOrderStatus(ctx context.Context, vendorID, orderID, status string) (*Order, error)
 	}
+
+	Wishlist interface {
+		AddToWishList(ctx context.Context, userUUID, productID string) (*Wishlist, error)
+		GetUserWishlist(ctx context.Context, userUUID string) ([]Wishlist, error)
+		GetWishlistByID(ctx context.Context, userUUID, productID string) (*Wishlist, error)
+		DeleteFromWishlist(ctx context.Context, userUUID, productID string) error
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
@@ -83,6 +90,7 @@ func NewStorage(db *sql.DB) Storage {
 		Product:  &ProductStore{db},
 		Cart:     &CartStore{db},
 		Order:    &OrderStore{db},
+		Wishlist: &WishlistStore{db},
 	}
 }
 
