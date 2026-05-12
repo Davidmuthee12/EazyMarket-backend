@@ -359,6 +359,17 @@ definitions:
       subdomain:
         type: string
     type: object
+  store.Wishlist:
+    properties:
+      created_at:
+        type: string
+      product:
+        $ref: '#/definitions/store.Products'
+      product_id:
+        type: string
+      user_id:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -1352,6 +1363,125 @@ paths:
       summary: Creates a vendor profile
       tags:
       - vendor
+  /wishlist:
+    get:
+      description: Retrieves the authenticated user's wishlist with product details.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Wishlist retrieved
+          schema:
+            items:
+              $ref: '#/definitions/store.Wishlist'
+            type: array
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get wishlist
+      tags:
+      - wishlist
+  /wishlist/{productID}:
+    delete:
+      description: Removes a product from the authenticated user's wishlist.
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Product removed from wishlist
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete product from wishlist
+      tags:
+      - wishlist
+    get:
+      description: Retrieves one product from the authenticated user's wishlist.
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Wishlist item retrieved
+          schema:
+            $ref: '#/definitions/store.Wishlist'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get wishlist item
+      tags:
+      - wishlist
+    post:
+      description: Adds a product to the authenticated user's wishlist.
+      parameters:
+      - description: Product ID
+        in: path
+        name: productID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Product added to wishlist
+          schema:
+            $ref: '#/definitions/store.Wishlist'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "409":
+          description: Conflict
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Add product to wishlist
+      tags:
+      - wishlist
 securityDefinitions:
   ApiKeyAuth:
     in: header
