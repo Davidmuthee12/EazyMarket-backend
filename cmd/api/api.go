@@ -174,6 +174,14 @@ func (app *application) mount() http.Handler {
 			r.Get("/{orderID}", app.getOrderByIDHandler)
 			r.Put("/{orderID}/cancel", app.cancelOrderHandler)
 		})
+
+		r.Route("/wishlist", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+			r.Post("/{productID}", app.addToWishlistHandler)
+			r.Get("/", app.getUserWishlistHandler)
+			r.Get("/{productID}", app.getWishlistByIDHandler)
+			r.Delete("/{productID}", app.deleteWishlistItemHandler)
+		})
 	})
 
 	return r
