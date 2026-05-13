@@ -45,9 +45,10 @@ func (s *ProductStore) CreateProduct(ctx context.Context, product *Products, ven
 			compare_price,
 			stock_quantity,
 			sku,
+			status,
 			weight
 		)
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE(NULLIF($10, ''), 'draft'), $11)
 		RETURNING id, created_at, updated_at
 	`
 
@@ -66,6 +67,7 @@ func (s *ProductStore) CreateProduct(ctx context.Context, product *Products, ven
 		product.Compare_Price,
 		product.Stock_Quantity,
 		product.SKU,
+		product.Status,
 		product.Weight,
 	).Scan(
 		&product.ID,
@@ -79,7 +81,7 @@ func (s *ProductStore) CreateProduct(ctx context.Context, product *Products, ven
 			switch pqErr.Constraint {
 			case "products_name_key":
 				return ErrDuplicateProductName
-			case "products_slug_key":
+			case "products_slug_key", "products_vendor_slug_idx":
 				return ErrDuplicateProductSlug
 			}
 		}
@@ -216,6 +218,126 @@ func (s *ProductStore) GetProductByUUID(ctx context.Context, productID string) (
 
 }
 
+func (s *ProductStore) GetPublishedProductsByVendor(ctx context.Context, vendorID string) ([]Products, error) {
+	query := `
+		SELECT
+			id,
+			name,
+			slug,
+			description,
+			COALESCE(category_id::text, ''),
+			price,
+			COALESCE(compare_price, 0),
+			stock_quantity,
+			sku,
+			status,
+			COALESCE(weight, 0),
+			created_at,
+			updated_at
+		FROM products
+		WHERE vendor_id = $1 AND status = 'published'
+		ORDER BY created_at DESC
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query, vendorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	products := []Products{}
+	for rows.Next() {
+		var product Products
+
+		err := rows.Scan(
+			&product.ID,
+			&product.Name,
+			&product.Slug,
+			&product.Description,
+			&product.Category_ID,
+			&product.Price,
+			&product.Compare_Price,
+			&product.Stock_Quantity,
+			&product.SKU,
+			&product.Status,
+			&product.Weight,
+			&product.Created_At,
+			&product.Update_At,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		products = append(products, product)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return products, nil
+}
+
+func (s *ProductStore) GetPublishedProductBySlug(ctx context.Context, vendorID, slug string) (*Products, error) {
+	query := `
+		SELECT
+			id,
+			name,
+			slug,
+			description,
+			COALESCE(category_id::text, ''),
+			price,
+			COALESCE(compare_price, 0),
+			stock_quantity,
+			sku,
+			status,
+			COALESCE(weight, 0),
+			created_at,
+			updated_at
+		FROM products
+		WHERE vendor_id = $1 AND slug = $2 AND status = 'published'
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	product := &Products{}
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		vendorID,
+		slug,
+	).Scan(
+		&product.ID,
+		&product.Name,
+		&product.Slug,
+		&product.Description,
+		&product.Category_ID,
+		&product.Price,
+		&product.Compare_Price,
+		&product.Stock_Quantity,
+		&product.SKU,
+		&product.Status,
+		&product.Weight,
+		&product.Created_At,
+		&product.Update_At,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return product, nil
+}
+
 func (s *ProductStore) UpdateProduct(ctx context.Context, product *Products, vendorID string) error {
 	query := `
 		UPDATE products
@@ -228,7 +350,8 @@ func (s *ProductStore) UpdateProduct(ctx context.Context, product *Products, ven
 			compare_price = $8,
 			stock_quantity = $9,
 			sku = $10,
-			weight = $11,
+			status = COALESCE(NULLIF($11, ''), status),
+			weight = $12,
 			updated_at = now()
 		WHERE id = $1 AND vendor_id = $2
 		RETURNING
@@ -263,6 +386,7 @@ func (s *ProductStore) UpdateProduct(ctx context.Context, product *Products, ven
 		product.Compare_Price,
 		product.Stock_Quantity,
 		product.SKU,
+		product.Status,
 		product.Weight,
 	).Scan(
 		&product.ID,
@@ -290,7 +414,7 @@ func (s *ProductStore) UpdateProduct(ctx context.Context, product *Products, ven
 				switch pqErr.Constraint {
 				case "products_name_key":
 					return ErrDuplicateProductName
-				case "products_slug_key":
+				case "products_slug_key", "products_vendor_slug_idx":
 					return ErrDuplicateProductSlug
 				}
 			}
