@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 
@@ -137,6 +138,62 @@ func (app *application) RequireActiveVendor(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (app *application) StorefrontMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		subdomain := app.storefrontSubdomain(r)
+		if subdomain == "" {
+			app.notFoundResponse(w, r, fmt.Errorf("storefront subdomain is missing"))
+			return
+		}
+
+		vendor, err := app.store.Vendor.GetVendorBySubdomain(r.Context(), subdomain)
+		if err != nil {
+			switch err {
+			case store.ErrNotFound:
+				app.notFoundResponse(w, r, err)
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), storefrontVendorCtx, vendor)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (app *application) storefrontSubdomain(r *http.Request) string {
+	if subdomain := strings.TrimSpace(r.Header.Get("X-Store-Subdomain")); subdomain != "" {
+		return strings.ToLower(subdomain)
+	}
+
+	if subdomain := strings.TrimSpace(r.URL.Query().Get("store")); subdomain != "" {
+		return strings.ToLower(subdomain)
+	}
+
+	host := r.Host
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+
+	host = strings.ToLower(host)
+	if host == "" || host == "localhost" || strings.HasPrefix(host, "127.") || strings.HasPrefix(host, "[::1]") {
+		return ""
+	}
+
+	parts := strings.Split(host, ".")
+	if len(parts) < 3 {
+		return ""
+	}
+
+	subdomain := parts[0]
+	if subdomain == "www" || subdomain == "api" {
+		return ""
+	}
+
+	return subdomain
 }
 
 func (app *application) checkRolePrecedence(ctx context.Context, user *store.User, roleName string) (bool, error) {
