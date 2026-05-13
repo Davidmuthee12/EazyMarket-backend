@@ -145,20 +145,31 @@ func (app *application) mount() http.Handler {
 		r.Route("/vendor", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
 			r.Use(app.RequireRole("vendor"))
-			r.Use(app.RequireActiveVendor)
 			r.Post("/profile", app.vendorProfileHandler)
 			r.Get("/profile", app.getVendorProfileHandler)
-			r.Post("/products", app.postProductsHandler)
-			r.Get("/products", app.getAllProducts)
-			r.Get("/products/{productID}", app.getProductByIDHandler)
-			r.Put("/products/{productID}", app.updateProductHandler)
-			r.Delete("/products/{productID}", app.deleteProductHandler)
-			r.Get("/orders", app.getVendorOrdersHandler)
-			r.Get("/orders/{orderID}", app.getVendorOrderByIDHandler)
-			r.Put("/orders/{orderID}/status", app.updateVendorOrderStatusHandler)
+
+			r.Group(func(r chi.Router) {
+				r.Use(app.RequireActiveVendor)
+				r.Post("/products", app.postProductsHandler)
+				r.Get("/products", app.getAllProducts)
+				r.Get("/products/{productID}", app.getProductByIDHandler)
+				r.Put("/products/{productID}", app.updateProductHandler)
+				r.Delete("/products/{productID}", app.deleteProductHandler)
+				r.Get("/orders", app.getVendorOrdersHandler)
+				r.Get("/orders/{orderID}", app.getVendorOrderByIDHandler)
+				r.Put("/orders/{orderID}/status", app.updateVendorOrderStatusHandler)
+			})
+		})
+
+		r.Route("/storefront", func(r chi.Router) {
+			r.Use(app.StorefrontMiddleware)
+			r.Get("/", app.getStorefrontHandler)
+			r.Get("/products", app.getStorefrontProductsHandler)
+			r.Get("/products/{slug}", app.getStorefrontProductBySlugHandler)
 		})
 
 		r.Route("/cart", func(r chi.Router) {
+			r.Use(app.StorefrontMiddleware)
 			r.Use(app.AuthTokenMiddleware)
 			r.Get("/", app.getCartHandler)
 			r.Post("/items", app.addCartItemHandler)
@@ -168,6 +179,7 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/orders", func(r chi.Router) {
+			r.Use(app.StorefrontMiddleware)
 			r.Use(app.AuthTokenMiddleware)
 			r.Post("/", app.createOrderHandler)
 			r.Get("/", app.getOrdersHandler)
@@ -176,6 +188,7 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/wishlist", func(r chi.Router) {
+			r.Use(app.StorefrontMiddleware)
 			r.Use(app.AuthTokenMiddleware)
 			r.Post("/{productID}", app.addToWishlistHandler)
 			r.Get("/", app.getUserWishlistHandler)
