@@ -38,7 +38,7 @@ type OrderStore struct {
 	db *sql.DB
 }
 
-func (s *OrderStore) CreateFromCart(ctx context.Context, userID string, shippingAddress []byte, notes string) (*Order, error) {
+func (s *OrderStore) CreateFromCart(ctx context.Context, userID, vendorID string, shippingAddress []byte, notes string) (*Order, error) {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
@@ -49,8 +49,8 @@ func (s *OrderStore) CreateFromCart(ctx context.Context, userID string, shipping
 		err := tx.QueryRowContext(ctx, `
 			SELECT id
 			FROM carts
-			WHERE user_id = $1 AND status = 'active'
-		`, userID).Scan(&cartID)
+			WHERE user_id = $1 AND vendor_id = $2 AND status = 'active'
+		`, userID, vendorID).Scan(&cartID)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return ErrEmptyCart
@@ -141,18 +141,19 @@ func (s *OrderStore) CreateFromCart(ctx context.Context, userID string, shipping
 	return order, nil
 }
 
-func (s *OrderStore) GetAll(ctx context.Context, userID string) ([]Order, error) {
+func (s *OrderStore) GetAll(ctx context.Context, userID, vendorID string) ([]Order, error) {
 	query := `
-		SELECT id, user_id, status, total_amount, COALESCE(shipping_address, '{}'::jsonb), COALESCE(notes, ''), created_at, updated_at
-		FROM orders
-		WHERE user_id = $1
-		ORDER BY created_at DESC
+		SELECT DISTINCT o.id, o.user_id, o.status, o.total_amount, COALESCE(o.shipping_address, '{}'::jsonb), COALESCE(o.notes, ''), o.created_at, o.updated_at
+		FROM orders o
+		JOIN order_items oi ON oi.order_id = o.id
+		WHERE o.user_id = $1 AND oi.vendor_id = $2
+		ORDER BY o.created_at DESC
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	orders, err := s.getOrders(ctx, query, userID)
+	orders, err := s.getOrders(ctx, query, userID, vendorID)
 	if err != nil {
 		return nil, err
 	}
@@ -160,25 +161,34 @@ func (s *OrderStore) GetAll(ctx context.Context, userID string) ([]Order, error)
 		return nil, ErrNotFound
 	}
 
+	for i := range orders {
+		items, err := s.getOrderItems(ctx, s.db, orders[i].ID, vendorID)
+		if err != nil {
+			return nil, err
+		}
+		orders[i].Items = items
+	}
+
 	return orders, nil
 }
 
-func (s *OrderStore) GetByID(ctx context.Context, userID, orderID string) (*Order, error) {
+func (s *OrderStore) GetByID(ctx context.Context, userID, vendorID, orderID string) (*Order, error) {
 	query := `
-		SELECT id, user_id, status, total_amount, COALESCE(shipping_address, '{}'::jsonb), COALESCE(notes, ''), created_at, updated_at
-		FROM orders
-		WHERE id = $1 AND user_id = $2
+		SELECT DISTINCT o.id, o.user_id, o.status, o.total_amount, COALESCE(o.shipping_address, '{}'::jsonb), COALESCE(o.notes, ''), o.created_at, o.updated_at
+		FROM orders o
+		JOIN order_items oi ON oi.order_id = o.id
+		WHERE o.id = $1 AND o.user_id = $2 AND oi.vendor_id = $3
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	order, err := s.getOrder(ctx, query, orderID, userID)
+	order, err := s.getOrder(ctx, query, orderID, userID, vendorID)
 	if err != nil {
 		return nil, err
 	}
 
-	items, err := s.getOrderItems(ctx, s.db, order.ID, "")
+	items, err := s.getOrderItems(ctx, s.db, order.ID, vendorID)
 	if err != nil {
 		return nil, err
 	}
@@ -187,25 +197,30 @@ func (s *OrderStore) GetByID(ctx context.Context, userID, orderID string) (*Orde
 	return order, nil
 }
 
-func (s *OrderStore) Cancel(ctx context.Context, userID, orderID string) (*Order, error) {
+func (s *OrderStore) Cancel(ctx context.Context, userID, vendorID, orderID string) (*Order, error) {
 	query := `
 		UPDATE orders
 		SET status = 'cancelled', updated_at = now()
 		WHERE id = $1
 			AND user_id = $2
 			AND status IN ('pending', 'confirmed')
+			AND EXISTS (
+				SELECT 1
+				FROM order_items oi
+				WHERE oi.order_id = orders.id AND oi.vendor_id = $3
+			)
 		RETURNING id, user_id, status, total_amount, COALESCE(shipping_address, '{}'::jsonb), COALESCE(notes, ''), created_at, updated_at
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	order, err := s.getOrder(ctx, query, orderID, userID)
+	order, err := s.getOrder(ctx, query, orderID, userID, vendorID)
 	if err != nil {
 		return nil, err
 	}
 
-	items, err := s.getOrderItems(ctx, s.db, order.ID, "")
+	items, err := s.getOrderItems(ctx, s.db, order.ID, vendorID)
 	if err != nil {
 		return nil, err
 	}
