@@ -19,10 +19,12 @@ type WishlistStore struct {
 	db *sql.DB
 }
 
-func (s *WishlistStore) AddToWishList(ctx context.Context, userUUID, productID string) (*Wishlist, error) {
+func (s *WishlistStore) AddToWishList(ctx context.Context, userUUID, vendorID, productID string) (*Wishlist, error) {
 	query := `
 		INSERT INTO wishlists (user_id, product_id)
-		VALUES ($1, $2)
+		SELECT $1, p.id
+		FROM products p
+		WHERE p.id = $2 AND p.vendor_id = $3 AND p.status = 'published'
 		RETURNING user_id, product_id, created_at
 	`
 
@@ -35,6 +37,7 @@ func (s *WishlistStore) AddToWishList(ctx context.Context, userUUID, productID s
 		query,
 		userUUID,
 		productID,
+		vendorID,
 	).Scan(
 		&wishlist.UserID,
 		&wishlist.ProductID,
@@ -62,7 +65,7 @@ func (s *WishlistStore) AddToWishList(ctx context.Context, userUUID, productID s
 	return wishlist, nil
 }
 
-func (s *WishlistStore) GetUserWishlist(ctx context.Context, userUUID string) ([]Wishlist, error) {
+func (s *WishlistStore) GetUserWishlist(ctx context.Context, userUUID, vendorID string) ([]Wishlist, error) {
 	query := `
 		SELECT
 			w.user_id,
@@ -83,14 +86,14 @@ func (s *WishlistStore) GetUserWishlist(ctx context.Context, userUUID string) ([
 			p.updated_at
 		FROM wishlists w
 		JOIN products p ON p.id = w.product_id
-		WHERE w.user_id = $1
+		WHERE w.user_id = $1 AND p.vendor_id = $2
 		ORDER BY w.created_at DESC
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(ctx, query, userUUID)
+	rows, err := s.db.QueryContext(ctx, query, userUUID, vendorID)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +137,7 @@ func (s *WishlistStore) GetUserWishlist(ctx context.Context, userUUID string) ([
 	return wishlists, nil
 }
 
-func (s *WishlistStore) GetWishlistByID(ctx context.Context, userUUID, productID string) (*Wishlist, error) {
+func (s *WishlistStore) GetWishlistByID(ctx context.Context, userUUID, vendorID, productID string) (*Wishlist, error) {
 	query := `
 		SELECT
 			w.user_id,
@@ -155,14 +158,14 @@ func (s *WishlistStore) GetWishlistByID(ctx context.Context, userUUID, productID
 			p.updated_at
 		FROM wishlists w
 		JOIN products p ON p.id = w.product_id
-		WHERE w.user_id = $1 AND w.product_id = $2
+		WHERE w.user_id = $1 AND p.vendor_id = $2 AND w.product_id = $3
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
 	wishlist := &Wishlist{}
-	err := s.db.QueryRowContext(ctx, query, userUUID, productID).Scan(
+	err := s.db.QueryRowContext(ctx, query, userUUID, vendorID, productID).Scan(
 		&wishlist.UserID,
 		&wishlist.ProductID,
 		&wishlist.CreatedAt,
@@ -190,16 +193,20 @@ func (s *WishlistStore) GetWishlistByID(ctx context.Context, userUUID, productID
 	return wishlist, nil
 }
 
-func (s *WishlistStore) DeleteFromWishlist(ctx context.Context, userUUID, productID string) error {
+func (s *WishlistStore) DeleteFromWishlist(ctx context.Context, userUUID, vendorID, productID string) error {
 	query := `
-		DELETE FROM wishlists
-		WHERE user_id = $1 AND product_id = $2
+		DELETE FROM wishlists w
+		USING products p
+		WHERE w.product_id = p.id
+			AND w.user_id = $1
+			AND p.vendor_id = $2
+			AND w.product_id = $3
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	res, err := s.db.ExecContext(ctx, query, userUUID, productID)
+	res, err := s.db.ExecContext(ctx, query, userUUID, vendorID, productID)
 	if err != nil {
 		return err
 	}
