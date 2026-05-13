@@ -39,6 +39,11 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		app.internalServerError(w, r, nil)
 		return
 	}
+	vendor := getStorefrontVendorFromCtx(r)
+	if vendor == nil {
+		app.notFoundResponse(w, r, store.ErrNotFound)
+		return
+	}
 
 	payload := CreateOrderPayload{}
 	if r.Body != nil {
@@ -61,7 +66,8 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	order, err := app.store.Order.CreateFromCart(r.Context(), user.UUID, shippingAddress, payload.Notes)
+	ctx := r.Context()
+	order, err := app.store.Order.CreateFromCart(ctx, user.UUID, vendor.UserID, shippingAddress, payload.Notes)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrEmptyCart):
@@ -94,8 +100,14 @@ func (app *application) getOrdersHandler(w http.ResponseWriter, r *http.Request)
 		app.internalServerError(w, r, nil)
 		return
 	}
+	vendor := getStorefrontVendorFromCtx(r)
+	if vendor == nil {
+		app.notFoundResponse(w, r, store.ErrNotFound)
+		return
+	}
 
-	orders, err := app.store.Order.GetAll(r.Context(), user.UUID)
+	ctx := r.Context()
+	orders, err := app.store.Order.GetAll(ctx, user.UUID, vendor.UserID)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrNotFound):
@@ -130,6 +142,11 @@ func (app *application) getOrderByIDHandler(w http.ResponseWriter, r *http.Reque
 		app.internalServerError(w, r, nil)
 		return
 	}
+	vendor := getStorefrontVendorFromCtx(r)
+	if vendor == nil {
+		app.notFoundResponse(w, r, store.ErrNotFound)
+		return
+	}
 
 	orderID := chi.URLParam(r, "orderID")
 	if _, err := uuid.Parse(orderID); err != nil {
@@ -137,7 +154,8 @@ func (app *application) getOrderByIDHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	order, err := app.store.Order.GetByID(r.Context(), user.UUID, orderID)
+	ctx := r.Context()
+	order, err := app.store.Order.GetByID(ctx, user.UUID, vendor.UserID, orderID)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrNotFound):
@@ -172,6 +190,11 @@ func (app *application) cancelOrderHandler(w http.ResponseWriter, r *http.Reques
 		app.internalServerError(w, r, nil)
 		return
 	}
+	vendor := getStorefrontVendorFromCtx(r)
+	if vendor == nil {
+		app.notFoundResponse(w, r, store.ErrNotFound)
+		return
+	}
 
 	orderID := chi.URLParam(r, "orderID")
 	if _, err := uuid.Parse(orderID); err != nil {
@@ -179,7 +202,8 @@ func (app *application) cancelOrderHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	order, err := app.store.Order.Cancel(r.Context(), user.UUID, orderID)
+	ctx := r.Context()
+	order, err := app.store.Order.Cancel(ctx, user.UUID, vendor.UserID, orderID)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrNotFound):
