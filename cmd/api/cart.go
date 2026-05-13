@@ -20,20 +20,27 @@ type CartQuantityPayload struct {
 // AddCartItem godoc
 //
 //	@Summary		Add item to cart
-//	@Description	Adds a product to the authenticated user's active cart. Creates the cart automatically if it does not exist.
+//	@Description	Adds a published product from the resolved storefront vendor to the authenticated user's active storefront cart. Creates the cart automatically if it does not exist.
 //	@Tags			cart
 //	@Accept			json
 //	@Produce		json
-//	@Param			payload	body		CartItemPayload	true	"Cart item payload"
-//	@Success		201		{object}	store.CartItem	"Cart item added"
-//	@Failure		400		{object}	error
-//	@Failure		500		{object}	error
+//	@Param			X-Store-Subdomain	header		string			false	"Vendor subdomain used when the request host is not a vendor subdomain"
+//	@Param			store				query		string			false	"Vendor subdomain fallback for local/dev clients"
+//	@Param			payload				body		CartItemPayload	true	"Cart item payload"
+//	@Success		201					{object}	store.CartItem	"Cart item added"
+//	@Failure		400					{object}	error
+//	@Failure		500					{object}	error
 //	@Security		ApiKeyAuth
 //	@Router			/cart/items [post]
 func (app *application) addCartItemHandler(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromCtx(r)
 	if user == nil {
 		app.internalServerError(w, r, nil)
+		return
+	}
+	vendor := getStorefrontVendorFromCtx(r)
+	if vendor == nil {
+		app.notFoundResponse(w, r, store.ErrNotFound)
 		return
 	}
 
@@ -50,7 +57,7 @@ func (app *application) addCartItemHandler(w http.ResponseWriter, r *http.Reques
 
 	ctx := r.Context()
 
-	item, err := app.store.Cart.AddItem(ctx, user.UUID, payload.ProductID, payload.Quantity)
+	item, err := app.store.Cart.AddItem(ctx, user.UUID, vendor.UserID, payload.ProductID, payload.Quantity)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -69,11 +76,13 @@ func (app *application) addCartItemHandler(w http.ResponseWriter, r *http.Reques
 // GetCart godoc
 //
 //	@Summary		Get cart
-//	@Description	Retrieves the authenticated user's active cart.
+//	@Description	Retrieves the authenticated user's active cart for the resolved storefront vendor.
 //	@Tags			cart
 //	@Produce		json
-//	@Success		200	{object}	store.Cart	"Cart retrieved"
-//	@Failure		500	{object}	error
+//	@Param			X-Store-Subdomain	header		string		false	"Vendor subdomain used when the request host is not a vendor subdomain"
+//	@Param			store				query		string		false	"Vendor subdomain fallback for local/dev clients"
+//	@Success		200					{object}	store.Cart	"Cart retrieved"
+//	@Failure		500					{object}	error
 //	@Security		ApiKeyAuth
 //	@Router			/cart [get]
 func (app *application) getCartHandler(w http.ResponseWriter, r *http.Request) {
@@ -82,8 +91,13 @@ func (app *application) getCartHandler(w http.ResponseWriter, r *http.Request) {
 		app.internalServerError(w, r, nil)
 		return
 	}
+	vendor := getStorefrontVendorFromCtx(r)
+	if vendor == nil {
+		app.notFoundResponse(w, r, store.ErrNotFound)
+		return
+	}
 
-	cart, err := app.store.Cart.GetCart(r.Context(), user.UUID)
+	cart, err := app.store.Cart.GetCart(r.Context(), user.UUID, vendor.UserID)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -97,22 +111,29 @@ func (app *application) getCartHandler(w http.ResponseWriter, r *http.Request) {
 // UpdateCartItem godoc
 //
 //	@Summary		Update cart item
-//	@Description	Updates the quantity of a product in the authenticated user's active cart.
+//	@Description	Updates the quantity of a product in the authenticated user's active cart for the resolved storefront vendor.
 //	@Tags			cart
 //	@Accept			json
 //	@Produce		json
-//	@Param			productID	path		string				true	"Product ID"
-//	@Param			payload		body		CartQuantityPayload	true	"Cart item quantity payload"
-//	@Success		200			{object}	store.CartItem		"Cart item updated"
-//	@Failure		400			{object}	error
-//	@Failure		404			{object}	error
-//	@Failure		500			{object}	error
+//	@Param			X-Store-Subdomain	header		string				false	"Vendor subdomain used when the request host is not a vendor subdomain"
+//	@Param			store				query		string				false	"Vendor subdomain fallback for local/dev clients"
+//	@Param			productID			path		string				true	"Product ID"
+//	@Param			payload				body		CartQuantityPayload	true	"Cart item quantity payload"
+//	@Success		200					{object}	store.CartItem		"Cart item updated"
+//	@Failure		400					{object}	error
+//	@Failure		404					{object}	error
+//	@Failure		500					{object}	error
 //	@Security		ApiKeyAuth
 //	@Router			/cart/items/{productID} [put]
 func (app *application) updateCartItemHandler(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromCtx(r)
 	if user == nil {
 		app.internalServerError(w, r, nil)
+		return
+	}
+	vendor := getStorefrontVendorFromCtx(r)
+	if vendor == nil {
+		app.notFoundResponse(w, r, store.ErrNotFound)
 		return
 	}
 
@@ -133,7 +154,7 @@ func (app *application) updateCartItemHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	item, err := app.store.Cart.UpdateItem(r.Context(), user.UUID, productID, payload.Quantity)
+	item, err := app.store.Cart.UpdateItem(r.Context(), user.UUID, vendor.UserID, productID, payload.Quantity)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -152,19 +173,26 @@ func (app *application) updateCartItemHandler(w http.ResponseWriter, r *http.Req
 // RemoveCartItem godoc
 //
 //	@Summary		Remove cart item
-//	@Description	Removes a product from the authenticated user's active cart.
+//	@Description	Removes a product from the authenticated user's active cart for the resolved storefront vendor.
 //	@Tags			cart
-//	@Param			productID	path		string	true	"Product ID"
-//	@Success		200			{object}	nil		"Cart item removed"
-//	@Failure		400			{object}	error
-//	@Failure		404			{object}	error
-//	@Failure		500			{object}	error
+//	@Param			X-Store-Subdomain	header		string	false	"Vendor subdomain used when the request host is not a vendor subdomain"
+//	@Param			store				query		string	false	"Vendor subdomain fallback for local/dev clients"
+//	@Param			productID			path		string	true	"Product ID"
+//	@Success		200					{object}	nil		"Cart item removed"
+//	@Failure		400					{object}	error
+//	@Failure		404					{object}	error
+//	@Failure		500					{object}	error
 //	@Security		ApiKeyAuth
 //	@Router			/cart/items/{productID} [delete]
 func (app *application) removeCartItemHandler(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromCtx(r)
 	if user == nil {
 		app.internalServerError(w, r, nil)
+		return
+	}
+	vendor := getStorefrontVendorFromCtx(r)
+	if vendor == nil {
+		app.notFoundResponse(w, r, store.ErrNotFound)
 		return
 	}
 
@@ -174,7 +202,7 @@ func (app *application) removeCartItemHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err := app.store.Cart.RemoveItem(r.Context(), user.UUID, productID)
+	err := app.store.Cart.RemoveItem(r.Context(), user.UUID, vendor.UserID, productID)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -193,10 +221,12 @@ func (app *application) removeCartItemHandler(w http.ResponseWriter, r *http.Req
 // ClearCart godoc
 //
 //	@Summary		Clear cart
-//	@Description	Removes all items from the authenticated user's active cart.
+//	@Description	Removes all items from the authenticated user's active cart for the resolved storefront vendor.
 //	@Tags			cart
-//	@Success		200	{object}	nil	"Cart cleared"
-//	@Failure		500	{object}	error
+//	@Param			X-Store-Subdomain	header		string	false	"Vendor subdomain used when the request host is not a vendor subdomain"
+//	@Param			store				query		string	false	"Vendor subdomain fallback for local/dev clients"
+//	@Success		200					{object}	nil		"Cart cleared"
+//	@Failure		500					{object}	error
 //	@Security		ApiKeyAuth
 //	@Router			/cart [delete]
 func (app *application) clearCartHandler(w http.ResponseWriter, r *http.Request) {
@@ -205,8 +235,13 @@ func (app *application) clearCartHandler(w http.ResponseWriter, r *http.Request)
 		app.internalServerError(w, r, nil)
 		return
 	}
+	vendor := getStorefrontVendorFromCtx(r)
+	if vendor == nil {
+		app.notFoundResponse(w, r, store.ErrNotFound)
+		return
+	}
 
-	if err := app.store.Cart.ClearCart(r.Context(), user.UUID); err != nil {
+	if err := app.store.Cart.ClearCart(r.Context(), user.UUID, vendor.UserID); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
