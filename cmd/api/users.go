@@ -344,7 +344,7 @@ func (app *application) setUserStatusHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	if admin.UUID == userUUID {
-		app.badRequestResponse(w, r, errors.New("You cannot change your own suspension status"))
+		app.badRequestResponse(w, r, errors.New("you cannot change your own suspension status"))
 		return
 	}
 
