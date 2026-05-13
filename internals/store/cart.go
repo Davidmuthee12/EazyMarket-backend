@@ -11,6 +11,7 @@ import (
 type Cart struct {
 	ID        string     `json:"id"`
 	UserID    string     `json:"user_id"`
+	VendorID  string     `json:"vendor_id"`
 	Status    string     `json:"status"`
 	Items     []CartItem `json:"items"`
 	Subtotal  float64    `json:"subtotal"`
@@ -34,19 +35,21 @@ type CartStore struct {
 	db *sql.DB
 }
 
-func (s *CartStore) AddItem(ctx context.Context, userID, productID string, quantity int) (*CartItem, error) {
+func (s *CartStore) AddItem(ctx context.Context, userID, vendorID, productID string, quantity int) (*CartItem, error) {
 	query := `
 		WITH active_cart AS (
-			INSERT INTO carts (user_id)
-			VALUES ($1)
-			ON CONFLICT (user_id)
+			INSERT INTO carts (user_id, vendor_id)
+			VALUES ($1, $2)
+			ON CONFLICT (user_id, vendor_id)
+			WHERE status = 'active'
 			DO UPDATE SET status = 'active', updated_at = now()
 			RETURNING id
 		),
 		upserted_item AS (
 			INSERT INTO cart_items (cart_id, product_id, quantity)
-			SELECT id, $2, $3
-			FROM active_cart
+			SELECT ac.id, $3, $4
+			FROM active_cart ac
+			JOIN products p ON p.id = $3 AND p.vendor_id = $2 AND p.status = 'published'
 			ON CONFLICT (cart_id, product_id)
 			DO UPDATE SET
 				quantity = cart_items.quantity + EXCLUDED.quantity,
@@ -83,7 +86,7 @@ func (s *CartStore) AddItem(ctx context.Context, userID, productID string, quant
 	defer cancel()
 
 	item := &CartItem{}
-	err := s.db.QueryRowContext(ctx, query, userID, productID, quantity).Scan(
+	err := s.db.QueryRowContext(ctx, query, userID, vendorID, productID, quantity).Scan(
 		&item.ID,
 		&item.CartID,
 		&item.ProductID,
@@ -113,25 +116,27 @@ func (s *CartStore) AddItem(ctx context.Context, userID, productID string, quant
 	return item, nil
 }
 
-func (s *CartStore) GetCart(ctx context.Context, userID string) (*Cart, error) {
+func (s *CartStore) GetCart(ctx context.Context, userID, vendorID string) (*Cart, error) {
 	query := `
-		SELECT id, user_id, status, created_at, updated_at
+		SELECT id, user_id, vendor_id, status, created_at, updated_at
 		FROM carts
-		WHERE user_id = $1 AND status = 'active'
+		WHERE user_id = $1 AND vendor_id = $2 AND status = 'active'
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
 	cart := &Cart{
-		UserID: userID,
-		Status: "active",
-		Items:  []CartItem{},
+		UserID:   userID,
+		VendorID: vendorID,
+		Status:   "active",
+		Items:    []CartItem{},
 	}
 
-	err := s.db.QueryRowContext(ctx, query, userID).Scan(
+	err := s.db.QueryRowContext(ctx, query, userID, vendorID).Scan(
 		&cart.ID,
 		&cart.UserID,
+		&cart.VendorID,
 		&cart.Status,
 		&cart.CreatedAt,
 		&cart.UpdatedAt,
@@ -154,16 +159,17 @@ func (s *CartStore) GetCart(ctx context.Context, userID string) (*Cart, error) {
 	return cart, nil
 }
 
-func (s *CartStore) UpdateItem(ctx context.Context, userID, productID string, quantity int) (*CartItem, error) {
+func (s *CartStore) UpdateItem(ctx context.Context, userID, vendorID, productID string, quantity int) (*CartItem, error) {
 	query := `
 		UPDATE cart_items ci
-		SET quantity = $3, updated_at = now()
+		SET quantity = $4, updated_at = now()
 		FROM carts c, products p
 		WHERE ci.cart_id = c.id
 			AND ci.product_id = p.id
 			AND c.user_id = $1
+			AND c.vendor_id = $2
 			AND c.status = 'active'
-			AND ci.product_id = $2
+			AND ci.product_id = $3
 		RETURNING
 			ci.id,
 			ci.cart_id,
@@ -192,7 +198,7 @@ func (s *CartStore) UpdateItem(ctx context.Context, userID, productID string, qu
 	defer cancel()
 
 	item := &CartItem{}
-	err := s.db.QueryRowContext(ctx, query, userID, productID, quantity).Scan(
+	err := s.db.QueryRowContext(ctx, query, userID, vendorID, productID, quantity).Scan(
 		&item.ID,
 		&item.CartID,
 		&item.ProductID,
@@ -225,20 +231,21 @@ func (s *CartStore) UpdateItem(ctx context.Context, userID, productID string, qu
 	return item, nil
 }
 
-func (s *CartStore) RemoveItem(ctx context.Context, userID, productID string) error {
+func (s *CartStore) RemoveItem(ctx context.Context, userID, vendorID, productID string) error {
 	query := `
 		DELETE FROM cart_items ci
 		USING carts c
 		WHERE ci.cart_id = c.id
 			AND c.user_id = $1
+			AND c.vendor_id = $2
 			AND c.status = 'active'
-			AND ci.product_id = $2
+			AND ci.product_id = $3
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	res, err := s.db.ExecContext(ctx, query, userID, productID)
+	res, err := s.db.ExecContext(ctx, query, userID, vendorID, productID)
 	if err != nil {
 		return err
 	}
@@ -254,19 +261,20 @@ func (s *CartStore) RemoveItem(ctx context.Context, userID, productID string) er
 	return nil
 }
 
-func (s *CartStore) ClearCart(ctx context.Context, userID string) error {
+func (s *CartStore) ClearCart(ctx context.Context, userID, vendorID string) error {
 	query := `
 		DELETE FROM cart_items ci
 		USING carts c
 		WHERE ci.cart_id = c.id
 			AND c.user_id = $1
+			AND c.vendor_id = $2
 			AND c.status = 'active'
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	_, err := s.db.ExecContext(ctx, query, userID)
+	_, err := s.db.ExecContext(ctx, query, userID, vendorID)
 	return err
 }
 
@@ -350,6 +358,10 @@ func (s *CartStore) getCartItems(ctx context.Context, cartID string) ([]CartItem
 }
 
 func mapCartError(err error) error {
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNotFound
+	}
+
 	var pqErr *pq.Error
 	if errors.As(err, &pqErr) && pqErr.Code == "23503" {
 		return ErrNotFound
