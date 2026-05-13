@@ -10,11 +10,13 @@ import (
 
 var (
 	ErrDuplicateStoreName     = errors.New("a vendor with a similar storename already exists")
+	ErrDuplicateSubdomain     = errors.New("a vendor with a similar subdomain already exists")
 	ErrDuplicateBusinessEmail = errors.New("a vendore with similar business email already exists")
 )
 
 type Vendor struct {
 	ID             int64  `json:"-"`
+	UserID         string `json:"user_id"`
 	Storename      string `json:"storename"`
 	Subdomain      string `json:"subdomain"`
 	Description    string `json:"description"`
@@ -67,6 +69,7 @@ func (s *VenderStore) CreateVendorProfile(ctx context.Context, Vendor *Vendor, u
 		&Vendor.ID,
 		&Vendor.CreatedAt,
 	)
+	Vendor.UserID = userUUID
 
 	if err != nil {
 		var pqErr *pq.Error
@@ -74,6 +77,8 @@ func (s *VenderStore) CreateVendorProfile(ctx context.Context, Vendor *Vendor, u
 			switch pqErr.Constraint {
 			case "vendors_email_key":
 				return ErrDuplicateBusinessEmail
+			case "vendor_profiles_subdomain_key":
+				return ErrDuplicateSubdomain
 			case "store_name_key":
 				return ErrDuplicateStoreName
 			}
@@ -89,6 +94,7 @@ func (s *VenderStore) CreateVendorProfile(ctx context.Context, Vendor *Vendor, u
 func (s *VenderStore) GetVendorByUUID(ctx context.Context, userID string) (*Vendor, error) {
 	query := `
 		SELECT
+			user_id,
 			store_name,
 			subdomain,
 			description,
@@ -111,6 +117,58 @@ func (s *VenderStore) GetVendorByUUID(ctx context.Context, userID string) (*Vend
 		query,
 		userID,
 	).Scan(
+		&vendor.UserID,
+		&vendor.Storename,
+		&vendor.Subdomain,
+		&vendor.Description,
+		&vendor.Logo_URL,
+		&vendor.Banner_URL,
+		&vendor.Business_Email,
+		&vendor.Business_Phone,
+		&vendor.Status,
+		&vendor.Address,
+		&vendor.CreatedAt,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return vendor, nil
+}
+
+func (s *VenderStore) GetVendorBySubdomain(ctx context.Context, subdomain string) (*Vendor, error) {
+	query := `
+		SELECT
+			user_id,
+			store_name,
+			subdomain,
+			description,
+			logo_url,
+			banner_url,
+			business_email,
+			business_phone,
+			status,
+			address,
+			created_at
+		FROM vendor_profiles
+		WHERE subdomain = $1 AND status = 'approved'
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	vendor := &Vendor{}
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		subdomain,
+	).Scan(
+		&vendor.UserID,
 		&vendor.Storename,
 		&vendor.Subdomain,
 		&vendor.Description,
