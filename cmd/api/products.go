@@ -17,6 +17,7 @@ type ProductPayload struct {
 	Compare_Price  float64 `json:"compare_price" validate:"omitempty"`
 	Stock_Quantity int     `json:"stock_quantity" validate:"required"`
 	SKU            string  `json:"sku" validate:"required,max=50"`
+	Status         string  `json:"status" validate:"omitempty,oneof=draft published archived"`
 	Weight         float64 `json:"weight" validate:"omitempty"`
 }
 
@@ -60,6 +61,7 @@ func (app *application) postProductsHandler(w http.ResponseWriter, r *http.Reque
 		Compare_Price:  Payload.Compare_Price,
 		Stock_Quantity: Payload.Stock_Quantity,
 		SKU:            Payload.SKU,
+		Status:         Payload.Status,
 		Weight:         Payload.Weight,
 	}
 
@@ -211,6 +213,7 @@ func (app *application) updateProductHandler(w http.ResponseWriter, r *http.Requ
 		Compare_Price:  payload.Compare_Price,
 		Stock_Quantity: payload.Stock_Quantity,
 		SKU:            payload.SKU,
+		Status:         payload.Status,
 		Weight:         payload.Weight,
 	}
 
