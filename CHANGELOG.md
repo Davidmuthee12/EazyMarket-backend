@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.7.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.6.0...v1.7.0) (2026-05-13)
+
+
+### Features
+
+* **api:** adds new api routes ([3d2025d](https://github.com/Davidmuthee12/EazyMarket-backend/commit/3d2025d221d86ee5b1b0b58471e708e1cb84567b))
+* **api:** adds new api routes for wishlists ([4947a71](https://github.com/Davidmuthee12/EazyMarket-backend/commit/4947a71a5371ff58df6aa40c0f517ce5ac32e5c2))
+* **api:** adds new status update handler ([18537f0](https://github.com/Davidmuthee12/EazyMarket-backend/commit/18537f0fd3d11a85f80109984813c828ed99595c))
+* **api:** adds wishlists handlers ([f1bd091](https://github.com/Davidmuthee12/EazyMarket-backend/commit/f1bd091430d976fc34e49ff6a3b9b25f724a76f2))
+* **api:** mount storefront-scoped routes ([c17662b](https://github.com/Davidmuthee12/EazyMarket-backend/commit/c17662bcc5491e9e9c8aaf4bb544e6f6096259f4))
+* **api:** resolve storefront vendor context ([0852211](https://github.com/Davidmuthee12/EazyMarket-backend/commit/0852211d63d284c415b0366fe8b96e079428cbc9))
+* **cart:** scope cart handlers to storefront ([b5ac5ae](https://github.com/Davidmuthee12/EazyMarket-backend/commit/b5ac5ae27ceea81738b948a906a5aff8886f8ce3))
+* **cart:** scope cart storage by vendor ([226fa79](https://github.com/Davidmuthee12/EazyMarket-backend/commit/226fa791bb0ef49ede8e00f8933b13804e380110))
+* **db:** scope storefront data by vendor ([a926b99](https://github.com/Davidmuthee12/EazyMarket-backend/commit/a926b999bf637bad379112329e8c991d765b5bd7))
+* **middleware:** adds new middleware to prevent suspended vendor accounts ([5fa7be4](https://github.com/Davidmuthee12/EazyMarket-backend/commit/5fa7be4181c34345d615325c4dadc9d9538c21c3))
+* **migration:** adds new migration for wishlist table ([35012eb](https://github.com/Davidmuthee12/EazyMarket-backend/commit/35012eb8ff8c029f05348bcb6ff0daa965053687))
+* **migration:** adds new migration to alter users table with status column ([2649f61](https://github.com/Davidmuthee12/EazyMarket-backend/commit/2649f612b74edf2cf59bd7fa2a6a4517bd4cf1eb))
+* **orders:** filter customer orders by vendor ([081639c](https://github.com/Davidmuthee12/EazyMarket-backend/commit/081639cd62b45f501360b589d0c3b66398246f54))
+* **orders:** scope customer orders to storefront ([d106462](https://github.com/Davidmuthee12/EazyMarket-backend/commit/d1064626d6f3bdea1802fbe54955c9c9e7cee4b1))
+* **products:** add storefront product queries ([6d756e4](https://github.com/Davidmuthee12/EazyMarket-backend/commit/6d756e4cfa91fb070affc4c7ed3c662a964d5e2d))
+* **products:** allow vendor product statuses ([f739b74](https://github.com/Davidmuthee12/EazyMarket-backend/commit/f739b74ed5b913fd78d15d9f07e1ef047166e357))
+* **redis-cache:** ensures suspended accounts are unathorized immediately in cache ([64c5b05](https://github.com/Davidmuthee12/EazyMarket-backend/commit/64c5b05562978460dd1af06a3e109d87685eeef5))
+* **store:** adds new status update function for vendors ([9205924](https://github.com/Davidmuthee12/EazyMarket-backend/commit/9205924c326bd492302867d0b85f255e673de350))
+* **store:** adds new store function for status update ([b7eb259](https://github.com/Davidmuthee12/EazyMarket-backend/commit/b7eb2595f2752f3b2a7697d1268ad707e5ea9807))
+* **store:** adds wishlist db level queries ([0570380](https://github.com/Davidmuthee12/EazyMarket-backend/commit/0570380bf82d2c4e3c6c1a2e644084a62e461e3f))
+* **storefront:** add public storefront handlers ([f35b029](https://github.com/Davidmuthee12/EazyMarket-backend/commit/f35b02972408c4b8ddd531a8dba0ae95317f753e))
+* **store:** wires status update handler to store ([883900a](https://github.com/Davidmuthee12/EazyMarket-backend/commit/883900a901dc110fe071d4f4983e6a8659b8e215))
+* **store:** wires wishlist api level to store level ([0b271fe](https://github.com/Davidmuthee12/EazyMarket-backend/commit/0b271fe6094a87f62e89b06595cb7c34c3f6dd90))
+* **vendor:** lookup storefronts by subdomain ([c455ec5](https://github.com/Davidmuthee12/EazyMarket-backend/commit/c455ec5e893c01e04b7254849fd16d149e2838ae))
+* **wishlist:** filter wishlist by vendor ([701f68c](https://github.com/Davidmuthee12/EazyMarket-backend/commit/701f68c134a93133c1958c300fca351cdbed55ba))
+* **wishlist:** scope wishlist handlers to storefront ([675bbfa](https://github.com/Davidmuthee12/EazyMarket-backend/commit/675bbfa183bf45977862cae7fd52e906967b17b1))
+
+
+### Bug Fixes
+
+* **lint:** fixes lint errors ([f88ab43](https://github.com/Davidmuthee12/EazyMarket-backend/commit/f88ab4341326f480a43aceb996e563fa4b19131a))
+* **vendor:** handle duplicate subdomains ([6c501e7](https://github.com/Davidmuthee12/EazyMarket-backend/commit/6c501e768b14e28b579d5f3d1b8b52272d2f8b5f))
+
 ## [1.6.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.5.0...v1.6.0) (2026-05-10)
 
 
