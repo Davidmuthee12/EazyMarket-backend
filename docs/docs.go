@@ -528,7 +528,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves the authenticated user's active cart.",
+                "description": "Retrieves the authenticated user's active cart for the resolved storefront vendor.",
                 "produces": [
                     "application/json"
                 ],
@@ -536,6 +536,20 @@ const docTemplate = `{
                     "cart"
                 ],
                 "summary": "Get cart",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Cart retrieved",
@@ -555,11 +569,25 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Removes all items from the authenticated user's active cart.",
+                "description": "Removes all items from the authenticated user's active cart for the resolved storefront vendor.",
                 "tags": [
                     "cart"
                 ],
                 "summary": "Clear cart",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Cart cleared"
@@ -578,7 +606,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Adds a product to the authenticated user's active cart. Creates the cart automatically if it does not exist.",
+                "description": "Adds a published product from the resolved storefront vendor to the authenticated user's active storefront cart. Creates the cart automatically if it does not exist.",
                 "consumes": [
                     "application/json"
                 ],
@@ -590,6 +618,18 @@ const docTemplate = `{
                 ],
                 "summary": "Add item to cart",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    },
                     {
                         "description": "Cart item payload",
                         "name": "payload",
@@ -625,7 +665,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Updates the quantity of a product in the authenticated user's active cart.",
+                "description": "Updates the quantity of a product in the authenticated user's active cart for the resolved storefront vendor.",
                 "consumes": [
                     "application/json"
                 ],
@@ -637,6 +677,18 @@ const docTemplate = `{
                 ],
                 "summary": "Update cart item",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "Product ID",
@@ -681,12 +733,24 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Removes a product from the authenticated user's active cart.",
+                "description": "Removes a product from the authenticated user's active cart for the resolved storefront vendor.",
                 "tags": [
                     "cart"
                 ],
                 "summary": "Remove cart item",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "Product ID",
@@ -907,6 +971,142 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/storefront": {
+            "get": {
+                "description": "Retrieves the approved vendor storefront resolved from the request subdomain. For local/dev clients, pass the vendor subdomain using X-Store-Subdomain or the store query parameter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefront"
+                ],
+                "summary": "Get storefront profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Storefront profile retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/store.Vendor"
+                        }
+                    },
+                    "404": {
+                        "description": "Storefront not found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/storefront/products": {
+            "get": {
+                "description": "Retrieves published products for the approved vendor storefront resolved from the request subdomain. For local/dev clients, pass the vendor subdomain using X-Store-Subdomain or the store query parameter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefront"
+                ],
+                "summary": "Get storefront products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Published storefront products retrieved",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/store.Products"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Storefront not found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/storefront/products/{slug}": {
+            "get": {
+                "description": "Retrieves one published product from the approved vendor storefront resolved from the request subdomain. For local/dev clients, pass the vendor subdomain using X-Store-Subdomain or the store query parameter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefront"
+                ],
+                "summary": "Get storefront product by slug",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Product slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Published storefront product retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/store.Products"
+                        }
+                    },
+                    "404": {
+                        "description": "Storefront or product not found",
                         "schema": {}
                     },
                     "500": {
@@ -1528,7 +1728,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves the authenticated user's wishlist with product details.",
+                "description": "Retrieves the authenticated user's wishlist with product details for the resolved storefront vendor.",
                 "produces": [
                     "application/json"
                 ],
@@ -1536,6 +1736,20 @@ const docTemplate = `{
                     "wishlist"
                 ],
                 "summary": "Get wishlist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Wishlist retrieved",
@@ -1564,7 +1778,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves one product from the authenticated user's wishlist.",
+                "description": "Retrieves one product from the authenticated user's wishlist for the resolved storefront vendor.",
                 "produces": [
                     "application/json"
                 ],
@@ -1573,6 +1787,18 @@ const docTemplate = `{
                 ],
                 "summary": "Get wishlist item",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "Product ID",
@@ -1612,7 +1838,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Adds a product to the authenticated user's wishlist.",
+                "description": "Adds a published product from the resolved storefront vendor to the authenticated user's storefront wishlist.",
                 "produces": [
                     "application/json"
                 ],
@@ -1621,6 +1847,18 @@ const docTemplate = `{
                 ],
                 "summary": "Add product to wishlist",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "Product ID",
@@ -1664,12 +1902,24 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Removes a product from the authenticated user's wishlist.",
+                "description": "Removes a product from the authenticated user's wishlist for the resolved storefront vendor.",
                 "tags": [
                     "wishlist"
                 ],
                 "summary": "Delete product from wishlist",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "Product ID",
@@ -1818,6 +2068,14 @@ const docTemplate = `{
                 "slug": {
                     "type": "string",
                     "maxLength": 100
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "published",
+                        "archived"
+                    ]
                 },
                 "stock_quantity": {
                     "type": "integer"
@@ -1973,6 +2231,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                },
+                "vendor_id": {
                     "type": "string"
                 }
             }
@@ -2226,6 +2487,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "subdomain": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

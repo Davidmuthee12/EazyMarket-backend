@@ -76,6 +76,12 @@ definitions:
       slug:
         maxLength: 100
         type: string
+      status:
+        enum:
+        - draft
+        - published
+        - archived
+        type: string
       stock_quantity:
         type: integer
       weight:
@@ -191,6 +197,8 @@ definitions:
       updated_at:
         type: string
       user_id:
+        type: string
+      vendor_id:
         type: string
     type: object
   store.CartItem:
@@ -357,6 +365,8 @@ definitions:
       storename:
         type: string
       subdomain:
+        type: string
+      user_id:
         type: string
     type: object
   store.Wishlist:
@@ -712,7 +722,17 @@ paths:
       - authentication
   /cart:
     delete:
-      description: Removes all items from the authenticated user's active cart.
+      description: Removes all items from the authenticated user's active cart for
+        the resolved storefront vendor.
+      parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
       responses:
         "200":
           description: Cart cleared
@@ -725,7 +745,17 @@ paths:
       tags:
       - cart
     get:
-      description: Retrieves the authenticated user's active cart.
+      description: Retrieves the authenticated user's active cart for the resolved
+        storefront vendor.
+      parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
       produces:
       - application/json
       responses:
@@ -745,9 +775,18 @@ paths:
     post:
       consumes:
       - application/json
-      description: Adds a product to the authenticated user's active cart. Creates
-        the cart automatically if it does not exist.
+      description: Adds a published product from the resolved storefront vendor to
+        the authenticated user's active storefront cart. Creates the cart automatically
+        if it does not exist.
       parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
       - description: Cart item payload
         in: body
         name: payload
@@ -774,8 +813,17 @@ paths:
       - cart
   /cart/items/{productID}:
     delete:
-      description: Removes a product from the authenticated user's active cart.
+      description: Removes a product from the authenticated user's active cart for
+        the resolved storefront vendor.
       parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
       - description: Product ID
         in: path
         name: productID
@@ -802,8 +850,16 @@ paths:
       consumes:
       - application/json
       description: Updates the quantity of a product in the authenticated user's active
-        cart.
+        cart for the resolved storefront vendor.
       parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
       - description: Product ID
         in: path
         name: productID
@@ -968,6 +1024,103 @@ paths:
       summary: Cancel an order
       tags:
       - orders
+  /storefront:
+    get:
+      description: Retrieves the approved vendor storefront resolved from the request
+        subdomain. For local/dev clients, pass the vendor subdomain using X-Store-Subdomain
+        or the store query parameter.
+      parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Storefront profile retrieved
+          schema:
+            $ref: '#/definitions/store.Vendor'
+        "404":
+          description: Storefront not found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Get storefront profile
+      tags:
+      - storefront
+  /storefront/products:
+    get:
+      description: Retrieves published products for the approved vendor storefront
+        resolved from the request subdomain. For local/dev clients, pass the vendor
+        subdomain using X-Store-Subdomain or the store query parameter.
+      parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Published storefront products retrieved
+          schema:
+            items:
+              $ref: '#/definitions/store.Products'
+            type: array
+        "404":
+          description: Storefront not found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Get storefront products
+      tags:
+      - storefront
+  /storefront/products/{slug}:
+    get:
+      description: Retrieves one published product from the approved vendor storefront
+        resolved from the request subdomain. For local/dev clients, pass the vendor
+        subdomain using X-Store-Subdomain or the store query parameter.
+      parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
+      - description: Product slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Published storefront product retrieved
+          schema:
+            $ref: '#/definitions/store.Products'
+        "404":
+          description: Storefront or product not found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Get storefront product by slug
+      tags:
+      - storefront
   /users/:
     get:
       description: Fetches all users
@@ -1365,7 +1518,17 @@ paths:
       - vendor
   /wishlist:
     get:
-      description: Retrieves the authenticated user's wishlist with product details.
+      description: Retrieves the authenticated user's wishlist with product details
+        for the resolved storefront vendor.
+      parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
       produces:
       - application/json
       responses:
@@ -1388,8 +1551,17 @@ paths:
       - wishlist
   /wishlist/{productID}:
     delete:
-      description: Removes a product from the authenticated user's wishlist.
+      description: Removes a product from the authenticated user's wishlist for the
+        resolved storefront vendor.
       parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
       - description: Product ID
         in: path
         name: productID
@@ -1416,8 +1588,17 @@ paths:
       tags:
       - wishlist
     get:
-      description: Retrieves one product from the authenticated user's wishlist.
+      description: Retrieves one product from the authenticated user's wishlist for
+        the resolved storefront vendor.
       parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
       - description: Product ID
         in: path
         name: productID
@@ -1448,8 +1629,17 @@ paths:
       tags:
       - wishlist
     post:
-      description: Adds a product to the authenticated user's wishlist.
+      description: Adds a published product from the resolved storefront vendor to
+        the authenticated user's storefront wishlist.
       parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
       - description: Product ID
         in: path
         name: productID
