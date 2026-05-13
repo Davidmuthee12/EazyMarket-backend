@@ -37,6 +37,7 @@ type Storage struct {
 	Vendor interface {
 		CreateVendorProfile(ctx context.Context, Vendor *Vendor, userUUID string) error
 		GetVendorByUUID(ctx context.Context, userID string) (*Vendor, error)
+		GetVendorBySubdomain(ctx context.Context, subdomain string) (*Vendor, error)
 		SetStatus(ctx context.Context, userUUID, status string) error
 	}
 
@@ -51,33 +52,35 @@ type Storage struct {
 		CreateProduct(ctx context.Context, product *Products, vendorID string) error
 		GetAllProduct(ctx context.Context, vendorID string) ([]Products, error)
 		GetProductByUUID(ctx context.Context, productID string) (*Products, error)
+		GetPublishedProductsByVendor(ctx context.Context, vendorID string) ([]Products, error)
+		GetPublishedProductBySlug(ctx context.Context, vendorID, slug string) (*Products, error)
 		UpdateProduct(ctx context.Context, product *Products, vendorID string) error
 		DeleteProduct(ctx context.Context, productID string, vendorID string) error
 	}
 
 	Cart interface {
-		AddItem(ctx context.Context, userID, productID string, quantity int) (*CartItem, error)
-		GetCart(ctx context.Context, userID string) (*Cart, error)
-		UpdateItem(ctx context.Context, userID, productID string, quantity int) (*CartItem, error)
-		RemoveItem(ctx context.Context, userID, productID string) error
-		ClearCart(ctx context.Context, userID string) error
+		AddItem(ctx context.Context, userID, vendorID, productID string, quantity int) (*CartItem, error)
+		GetCart(ctx context.Context, userID, vendorID string) (*Cart, error)
+		UpdateItem(ctx context.Context, userID, vendorID, productID string, quantity int) (*CartItem, error)
+		RemoveItem(ctx context.Context, userID, vendorID, productID string) error
+		ClearCart(ctx context.Context, userID, vendorID string) error
 	}
 
 	Order interface {
-		CreateFromCart(ctx context.Context, userID string, shippingAddress []byte, notes string) (*Order, error)
-		GetAll(ctx context.Context, userID string) ([]Order, error)
-		GetByID(ctx context.Context, userID, orderID string) (*Order, error)
-		Cancel(ctx context.Context, userID, orderID string) (*Order, error)
+		CreateFromCart(ctx context.Context, userID, vendorID string, shippingAddress []byte, notes string) (*Order, error)
+		GetAll(ctx context.Context, userID, vendorID string) ([]Order, error)
+		GetByID(ctx context.Context, userID, vendorID, orderID string) (*Order, error)
+		Cancel(ctx context.Context, userID, vendorID, orderID string) (*Order, error)
 		GetVendorOrders(ctx context.Context, vendorID string) ([]Order, error)
 		GetVendorOrderByID(ctx context.Context, vendorID, orderID string) (*Order, error)
 		UpdateVendorOrderStatus(ctx context.Context, vendorID, orderID, status string) (*Order, error)
 	}
 
 	Wishlist interface {
-		AddToWishList(ctx context.Context, userUUID, productID string) (*Wishlist, error)
-		GetUserWishlist(ctx context.Context, userUUID string) ([]Wishlist, error)
-		GetWishlistByID(ctx context.Context, userUUID, productID string) (*Wishlist, error)
-		DeleteFromWishlist(ctx context.Context, userUUID, productID string) error
+		AddToWishList(ctx context.Context, userUUID, vendorID, productID string) (*Wishlist, error)
+		GetUserWishlist(ctx context.Context, userUUID, vendorID string) ([]Wishlist, error)
+		GetWishlistByID(ctx context.Context, userUUID, vendorID, productID string) (*Wishlist, error)
+		DeleteFromWishlist(ctx context.Context, userUUID, vendorID, productID string) error
 	}
 }
 
