@@ -13,6 +13,10 @@ type userKey string
 
 const userCtx userKey = "user"
 
+type storefrontVendorKey string
+
+const storefrontVendorCtx storefrontVendorKey = "storefront_vendor"
+
 // GetUser godoc
 //
 //	@Summary		Fetches a user profile
