@@ -64,6 +64,8 @@ func (app *application) vendorProfileHandler(w http.ResponseWriter, r *http.Requ
 		switch err {
 		case store.ErrDuplicateStoreName:
 			app.badRequestResponse(w, r, err)
+		case store.ErrDuplicateSubdomain:
+			app.badRequestResponse(w, r, err)
 		case store.ErrDuplicateBusinessEmail:
 			app.badRequestResponse(w, r, err)
 		default:
