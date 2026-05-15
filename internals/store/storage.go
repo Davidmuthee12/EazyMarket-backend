@@ -25,6 +25,7 @@ type Storage struct {
 		Activate(context.Context, string) error
 		Delete(context.Context, int64) error
 		UpdateRole(context.Context, string) error
+		SubmitVendorApplication(ctx context.Context, userUUID string, vendor *Vendor) error
 		GetUpgradeRequests(context.Context) ([]*User, error)
 		UpdateRoleRequest(ctx context.Context, userID, reviewerID string) error
 		RejectRequest(ctx context.Context, userID, reviewerID string) error
