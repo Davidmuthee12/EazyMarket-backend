@@ -12,6 +12,7 @@ var (
 	ErrDuplicateStoreName     = errors.New("a vendor with a similar storename already exists")
 	ErrDuplicateSubdomain     = errors.New("a vendor with a similar subdomain already exists")
 	ErrDuplicateBusinessEmail = errors.New("a vendore with similar business email already exists")
+	ErrVendorProfileExists    = errors.New("vendor profile already exists")
 )
 
 type Vendor struct {
@@ -72,23 +73,29 @@ func (s *VenderStore) CreateVendorProfile(ctx context.Context, Vendor *Vendor, u
 	Vendor.UserID = userUUID
 
 	if err != nil {
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
-			switch pqErr.Constraint {
-			case "vendors_email_key":
-				return ErrDuplicateBusinessEmail
-			case "vendor_profiles_subdomain_key":
-				return ErrDuplicateSubdomain
-			case "store_name_key":
-				return ErrDuplicateStoreName
-			}
-		}
-
-		return err
+		return mapVendorProfileCreateError(err)
 	}
 
 	return nil
 
+}
+
+func mapVendorProfileCreateError(err error) error {
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+		switch pqErr.Constraint {
+		case "vendor_profiles_user_id_key":
+			return ErrVendorProfileExists
+		case "vendors_email_key":
+			return ErrDuplicateBusinessEmail
+		case "vendor_profiles_subdomain_key":
+			return ErrDuplicateSubdomain
+		case "store_name_key":
+			return ErrDuplicateStoreName
+		}
+	}
+
+	return err
 }
 
 func (s *VenderStore) GetVendorByUUID(ctx context.Context, userID string) (*Vendor, error) {
