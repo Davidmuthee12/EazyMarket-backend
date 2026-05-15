@@ -8,6 +8,7 @@ import (
 	"github.com/Davidmuthee12/eazymarket/internals/db"
 	"github.com/Davidmuthee12/eazymarket/internals/env"
 	"github.com/Davidmuthee12/eazymarket/internals/mailer"
+	ratelimiter "github.com/Davidmuthee12/eazymarket/internals/rateLimiter"
 	"github.com/Davidmuthee12/eazymarket/internals/store"
 	cache "github.com/Davidmuthee12/eazymarket/internals/store/cache"
 	"github.com/redis/go-redis/v9"
@@ -67,6 +68,11 @@ func main() {
 			db:      env.GetInt("REDIS_DB", 0),
 			enabled: env.GetBool("REDIS_ENABLED", false),
 		},
+		rateLimiter: ratelimiter.Config{
+			RequestPerTimeFrame: env.GetInt("RATELIMITER_REQUEST_COUNT", 20),
+			TimeFrame:           time.Second * 5,
+			Enabled:             env.GetBool("RATE_LIMITER_ENABLED", true),
+		},
 	}
 
 	// logger
@@ -99,6 +105,11 @@ func main() {
 		defer rdb.Close()
 	}
 
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(
+		cfg.rateLimiter.RequestPerTimeFrame,
+		cfg.rateLimiter.TimeFrame,
+	)
+
 	store := store.NewStorage(db)
 
 	jwtAuthentticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.iss, cfg.auth.token.iss)
@@ -116,6 +127,7 @@ func main() {
 		logger:        logger,
 		mailer:        emailClient,
 		authenticator: jwtAuthentticator,
+		ratelimiter:   rateLimiter,
 	}
 
 	mux := app.mount()
