@@ -1250,7 +1250,10 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Submits a role upgrade request to vendor for the given user",
+                "description": "Submits a vendor application with requested storefront details. The subdomain remains inactive until admin approval.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1265,18 +1268,42 @@ const docTemplate = `{
                         "name": "userUUID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Vendor application payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.VendorApplicationPayload"
+                        }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Request submitted"
+                    "201": {
+                        "description": "Vendor application submitted",
+                        "schema": {
+                            "$ref": "#/definitions/store.Vendor"
+                        }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {}
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {}
+                    },
                     "404": {
                         "description": "Not Found",
+                        "schema": {}
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {}
                     },
                     "500": {
@@ -2164,7 +2191,7 @@ const docTemplate = `{
                 },
                 "subdomain": {
                     "type": "string",
-                    "maxLength": 100
+                    "maxLength": 63
                 }
             }
         },
@@ -2203,6 +2230,48 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "main.VendorApplicationPayload": {
+            "type": "object",
+            "required": [
+                "description",
+                "storename",
+                "subdomain"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "banner_url": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "business_email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "business_phone": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 250
+                },
+                "logo_url": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "storename": {
+                    "type": "string",
+                    "maxLength": 150
+                },
+                "subdomain": {
+                    "type": "string",
+                    "maxLength": 63
                 }
             }
         },

@@ -148,7 +148,7 @@ definitions:
         maxLength: 150
         type: string
       subdomain:
-        maxLength: 100
+        maxLength: 63
         type: string
     required:
     - description
@@ -179,6 +179,37 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  main.VendorApplicationPayload:
+    properties:
+      address:
+        maxLength: 100
+        type: string
+      banner_url:
+        maxLength: 100
+        type: string
+      business_email:
+        maxLength: 255
+        type: string
+      business_phone:
+        maxLength: 20
+        type: string
+      description:
+        maxLength: 250
+        type: string
+      logo_url:
+        maxLength: 100
+        type: string
+      storename:
+        maxLength: 150
+        type: string
+      subdomain:
+        maxLength: 63
+        type: string
+    required:
+    - description
+    - storename
+    - subdomain
     type: object
   store.Cart:
     properties:
@@ -1178,23 +1209,43 @@ paths:
       - users
   /users/{userUUID}/upgrade-to-vendor:
     post:
-      description: Submits a role upgrade request to vendor for the given user
+      consumes:
+      - application/json
+      description: Submits a vendor application with requested storefront details.
+        The subdomain remains inactive until admin approval.
       parameters:
       - description: user UUID
         in: path
         name: userUUID
         required: true
         type: string
+      - description: Vendor application payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.VendorApplicationPayload'
       produces:
       - application/json
       responses:
-        "200":
-          description: Request submitted
+        "201":
+          description: Vendor application submitted
+          schema:
+            $ref: '#/definitions/store.Vendor'
         "400":
           description: Bad Request
           schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
         "404":
           description: Not Found
+          schema: {}
+        "409":
+          description: Conflict
           schema: {}
         "500":
           description: Internal Server Error
