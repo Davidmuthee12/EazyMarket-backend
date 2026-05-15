@@ -445,39 +445,122 @@ func (s *UserStore) UpdateRole(ctx context.Context, userUUID string) error {
 	defer cancel()
 
 	_, err := s.db.ExecContext(ctx, query, userUUID)
+	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+			return ErrConflict
+		}
+
+		return err
+	}
+
 	return err
 }
 
-func (s *UserStore) UpdateRoleRequest(ctx context.Context, userID, reviewerUUID string) error {
-	query := `
-		UPDATE users
-		SET role = 'vendor', role_id = (SELECT id FROM roles WHERE name = 'vendor')
-		WHERE uuid = $1
-	`
-
+func (s *UserStore) SubmitVendorApplication(ctx context.Context, userUUID string, vendor *Vendor) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	// update the request table
-	if err := s.updateRequestTable(ctx, userID, reviewerUUID); err != nil {
-		return err
-	}
+	return withTx(s.db, ctx, func(tx *sql.Tx) error {
+		err := tx.QueryRowContext(ctx, `
+			INSERT INTO vendor_profiles(
+				user_id,
+				store_name,
+				subdomain,
+				description,
+				logo_url,
+				banner_url,
+				business_email,
+				business_phone,
+				address
+			)
+			VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			RETURNING id, created_at
+		`,
+			userUUID,
+			vendor.Storename,
+			vendor.Subdomain,
+			vendor.Description,
+			vendor.Logo_URL,
+			vendor.Banner_URL,
+			vendor.Business_Email,
+			vendor.Business_Phone,
+			vendor.Address,
+		).Scan(
+			&vendor.ID,
+			&vendor.CreatedAt,
+		)
+		vendor.UserID = userUUID
+		vendor.Status = "pending"
 
-	res, err := s.db.ExecContext(ctx, query, userID)
-	if err != nil {
-		return err
-	}
+		if err != nil {
+			return mapVendorProfileCreateError(err)
+		}
 
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
+		_, err = tx.ExecContext(ctx, `
+			INSERT INTO role_upgrade_requests (user_id, requested_role_id)
+			VALUES ($1, (SELECT id FROM roles WHERE name = 'vendor'))
+		`, userUUID)
+		if err != nil {
+			var pqErr *pq.Error
+			if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+				return ErrConflict
+			}
 
-	if rows == 0 {
-		return ErrNotFound
-	}
+			return err
+		}
 
-	return nil
+		return nil
+	})
+}
+
+func (s *UserStore) UpdateRoleRequest(ctx context.Context, userID, reviewerUUID string) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	return withTx(s.db, ctx, func(tx *sql.Tx) error {
+		if err := s.updateRequestTable(ctx, tx, userID, reviewerUUID); err != nil {
+			return err
+		}
+
+		res, err := tx.ExecContext(ctx, `
+			UPDATE users
+			SET role = 'vendor', role_id = (SELECT id FROM roles WHERE name = 'vendor')
+			WHERE uuid = $1
+		`, userID)
+		if err != nil {
+			return err
+		}
+
+		rows, err := res.RowsAffected()
+		if err != nil {
+			return err
+		}
+
+		if rows == 0 {
+			return ErrNotFound
+		}
+
+		res, err = tx.ExecContext(ctx, `
+			UPDATE vendor_profiles
+			SET status = 'approved', updated_at = NOW()
+			WHERE user_id = $1 AND status = 'pending'
+		`, userID)
+		if err != nil {
+			return err
+		}
+
+		rows, err = res.RowsAffected()
+		if err != nil {
+			return err
+		}
+
+		if rows == 0 {
+			return ErrNotFound
+		}
+
+		return nil
+	})
 }
 
 func (s *UserStore) GetUpgradeRequests(ctx context.Context) ([]*User, error) {
@@ -542,17 +625,14 @@ func (s *UserStore) GetUpgradeRequests(ctx context.Context) ([]*User, error) {
 	return requests, nil
 }
 
-func (s *UserStore) updateRequestTable(ctx context.Context, userID, reviewerID string) error {
+func (s *UserStore) updateRequestTable(ctx context.Context, tx *sql.Tx, userID, reviewerID string) error {
 	query := `
 		UPDATE role_upgrade_requests
 		SET status = 'approved', reviewed_by = $2, reviewed_at = NOW()
-		WHERE user_id = $1
+		WHERE user_id = $1 AND status = 'pending'
 	`
 
-	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
-	defer cancel()
-
-	res, err := s.db.ExecContext(ctx, query, userID, reviewerID)
+	res, err := tx.ExecContext(ctx, query, userID, reviewerID)
 	if err != nil {
 		return err
 	}
@@ -570,30 +650,35 @@ func (s *UserStore) updateRequestTable(ctx context.Context, userID, reviewerID s
 }
 
 func (s *UserStore) RejectRequest(ctx context.Context, userID, reviewerID string) error {
-	query := `
-		UPDATE role_upgrade_requests
-		SET status = 'Rejected', reviewed_by = $2, reviewed_at = NOW()
-		WHERE user_id = $1
-	`
-
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	res, err := s.db.ExecContext(ctx, query, userID, reviewerID)
-	if err != nil {
+	return withTx(s.db, ctx, func(tx *sql.Tx) error {
+		res, err := tx.ExecContext(ctx, `
+			UPDATE role_upgrade_requests
+			SET status = 'rejected', reviewed_by = $2, reviewed_at = NOW()
+			WHERE user_id = $1 AND status = 'pending'
+		`, userID, reviewerID)
+		if err != nil {
+			return err
+		}
+
+		rows, err := res.RowsAffected()
+		if err != nil {
+			return err
+		}
+
+		if rows == 0 {
+			return ErrNotFound
+		}
+
+		_, err = tx.ExecContext(ctx, `
+			UPDATE vendor_profiles
+			SET status = 'rejected', updated_at = NOW()
+			WHERE user_id = $1 AND status = 'pending'
+		`, userID)
 		return err
-	}
-
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rows == 0 {
-		return ErrNotFound
-	}
-
-	return nil
+	})
 }
 
 func (s *UserStore) SetStatus(ctx context.Context, userUUID, status string) error {
