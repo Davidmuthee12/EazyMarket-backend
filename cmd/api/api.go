@@ -9,9 +9,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Davidmuthee12/eazymarket/docs"
 	"github.com/Davidmuthee12/eazymarket/internals/auth"
 	"github.com/Davidmuthee12/eazymarket/internals/env"
 	"github.com/Davidmuthee12/eazymarket/internals/mailer"
+	ratelimiter "github.com/Davidmuthee12/eazymarket/internals/rateLimiter"
 	"github.com/Davidmuthee12/eazymarket/internals/store"
 	cache "github.com/Davidmuthee12/eazymarket/internals/store/cache"
 	"github.com/go-chi/chi/v5"
@@ -28,6 +30,7 @@ type application struct {
 	mailer        mailer.Client
 	authenticator auth.Authenticator
 	cacheStorage  cache.Storage
+	ratelimiter   ratelimiter.Limiter
 }
 
 type config struct {
@@ -39,6 +42,7 @@ type config struct {
 	mail        mailConfig
 	frontendURL string
 	redisCfg    redisConfig
+	rateLimiter ratelimiter.Config
 }
 
 type redisConfig struct {
@@ -94,6 +98,7 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(app.RateLimiterMiddleware)
 
 	r.Use(middleware.Timeout(60 * time.Second))
 
@@ -201,6 +206,11 @@ func (app *application) mount() http.Handler {
 }
 
 func (app *application) run(mux http.Handler) error {
+	// Docs
+	docs.SwaggerInfo.Version = version
+	docs.SwaggerInfo.Host = app.config.apiURL
+	docs.SwaggerInfo.BasePath = "/v1"
+
 	srv := &http.Server{
 		Addr:         app.config.addr,
 		Handler:      mux,
