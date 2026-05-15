@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -41,6 +43,7 @@ type config struct {
 	auth        authConfig
 	mail        mailConfig
 	frontendURL string
+	rootDomain  string
 	redisCfg    redisConfig
 	rateLimiter ratelimiter.Config
 }
@@ -85,9 +88,10 @@ func (app *application) mount() http.Handler {
 	// Basic CORS
 	// Be careful where you place the cors middleware. e.g. place before the RateLimiter.
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{env.GetString("CORS_ALLOWED_ORIGIN", "http://localhost:5174")},
+		AllowedOrigins:   []string{app.config.frontendURL},
+		AllowOriginFunc:  app.isAllowedCORSOrigin,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Store-Subdomain"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
@@ -203,6 +207,30 @@ func (app *application) mount() http.Handler {
 	})
 
 	return r
+}
+
+func (app *application) isAllowedCORSOrigin(_ *http.Request, origin string) bool {
+	if origin == "" || origin == app.config.frontendURL {
+		return true
+	}
+
+	allowedOrigin := env.GetString("CORS_ALLOWED_ORIGIN", "")
+	if allowedOrigin != "" && origin == allowedOrigin {
+		return true
+	}
+
+	u, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+
+	host := strings.ToLower(u.Hostname())
+	rootDomain := strings.ToLower(strings.TrimSpace(app.config.rootDomain))
+	if rootDomain == "" {
+		return false
+	}
+
+	return host != rootDomain && strings.HasSuffix(host, "."+rootDomain)
 }
 
 func (app *application) run(mux http.Handler) error {
