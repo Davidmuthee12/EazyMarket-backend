@@ -17,6 +17,17 @@ type storefrontVendorKey string
 
 const storefrontVendorCtx storefrontVendorKey = "storefront_vendor"
 
+type VendorApplicationPayload struct {
+	Storename      string `json:"storename" validate:"required,max=150"`
+	Subdomain      string `json:"subdomain" validate:"required,max=63"`
+	Description    string `json:"description" validate:"required,max=250"`
+	Logo_URL       string `json:"logo_url" validate:"omitempty,max=100"`
+	Banner_URL     string `json:"banner_url" validate:"omitempty,max=100"`
+	Business_Email string `json:"business_email" validate:"omitempty,email,max=255"`
+	Business_Phone string `json:"business_phone" validate:"omitempty,max=20"`
+	Address        string `json:"address" validate:"omitempty,max=100"`
+}
+
 // GetUser godoc
 //
 //	@Summary		Fetches a user profile
@@ -122,19 +133,52 @@ func (app *application) getAllUsersHandlers(w http.ResponseWriter, r *http.Reque
 // UpdateRole godoc
 //
 //	@Summary		Request a vendor role upgrade
-//	@Description	Submits a role upgrade request to vendor for the given user
+//	@Description	Submits a vendor application with requested storefront details. The subdomain remains inactive until admin approval.
 //	@Tags			users
+//	@Accept			json
 //	@Produce		json
-//	@Param			userUUID	path	string	true	"user UUID"
-//	@Success		200			"Request submitted"
+//	@Param			userUUID	path		string						true	"user UUID"
+//	@Param			payload		body		VendorApplicationPayload	true	"Vendor application payload"
+//	@Success		201			{object}	store.Vendor				"Vendor application submitted"
 //	@Failure		400			{object}	error
+//	@Failure		401			{object}	error
+//	@Failure		403			{object}	error
 //	@Failure		404			{object}	error
+//	@Failure		409			{object}	error
 //	@Failure		500			{object}	error
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userUUID}/upgrade-to-vendor [post]
 func (app *application) updateRoleHandler(w http.ResponseWriter, r *http.Request) {
 	userUUID := chi.URLParam(r, "userUUID")
 	if _, err := uuid.Parse(userUUID); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	authenticatedUser := getUserFromCtx(r)
+	if authenticatedUser == nil {
+		app.unauthorizedErrorResponse(w, r, nil)
+		return
+	}
+
+	if authenticatedUser.UUID != userUUID {
+		app.forbiddenResponse(w, r)
+		return
+	}
+
+	var payload VendorApplicationPayload
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(&payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	subdomain, err := normalizeSubdomain(payload.Subdomain)
+	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
@@ -152,16 +196,31 @@ func (app *application) updateRoleHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := app.store.Users.UpdateRole(ctx, user.UUID); err != nil {
+	vendor := &store.Vendor{
+		Storename:      payload.Storename,
+		Subdomain:      subdomain,
+		Description:    payload.Description,
+		Logo_URL:       payload.Logo_URL,
+		Banner_URL:     payload.Banner_URL,
+		Business_Email: payload.Business_Email,
+		Business_Phone: payload.Business_Phone,
+		Address:        payload.Address,
+		Status:         "pending",
+	}
+
+	if err := app.store.Users.SubmitVendorApplication(ctx, user.UUID, vendor); err != nil {
 		switch err {
-		case store.ErrNotFound:
-			app.notFoundResponse(w, r, err)
+		case store.ErrDuplicateStoreName, store.ErrDuplicateSubdomain, store.ErrDuplicateBusinessEmail:
+			app.badRequestResponse(w, r, err)
+		case store.ErrVendorProfileExists, store.ErrConflict:
+			app.conflictResponse(w, r, err)
 		default:
 			app.internalServerError(w, r, err)
 		}
+		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusOK, nil); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, vendor); err != nil {
 		app.internalServerError(w, r, err)
 	}
 
