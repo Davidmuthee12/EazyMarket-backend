@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS role_upgrade_requests_one_pending_per_user_idx;
