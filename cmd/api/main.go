@@ -62,6 +62,7 @@ func main() {
 			exp:       time.Hour * 24 * 3,
 		},
 		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:5174"),
+		rootDomain:  env.GetString("ROOT_DOMAIN", "eazymarket.com"),
 		redisCfg: redisConfig{
 			addr:    env.GetString("REDIS_ADDR", "localhost:6379"),
 			pw:      env.GetString("REDIS_PASSWORD", ""),
