@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.8.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.7.0...v1.8.0) (2026-05-15)
+
+
+### Features
+
+* **api:** add rate limiter middleware ([003a247](https://github.com/Davidmuthee12/EazyMarket-backend/commit/003a2472c48f73598838b0f603d7fab6f2d9f88b))
+* **api:** allow storefront subdomain origins ([6070ba2](https://github.com/Davidmuthee12/EazyMarket-backend/commit/6070ba255b14b6ff3889ddecb36bd94191699ff4))
+* **api:** configure rate limiter ([3cb8601](https://github.com/Davidmuthee12/EazyMarket-backend/commit/3cb860101920dd24add4c53a5d0f1581ce83db91))
+* **api:** mount rate limiter middleware ([00e0e9f](https://github.com/Davidmuthee12/EazyMarket-backend/commit/00e0e9f92d150f7fb3d0e2312fb7e9c3bb775cae))
+* **api:** validate vendor subdomains ([dc97cd5](https://github.com/Davidmuthee12/EazyMarket-backend/commit/dc97cd510652efa2c090d6f383d43f305e081b1c))
+* **db:** harden vendor applications ([3613390](https://github.com/Davidmuthee12/EazyMarket-backend/commit/36133903c6c6ed53b6e3f3e61c44dbec0bb529f8))
+* **ratelimiter:** add fixed window limiter ([e9cefd6](https://github.com/Davidmuthee12/EazyMarket-backend/commit/e9cefd65bf26d6cb8d3d517ada85a6b72b38ce41))
+* **ratelimiter:** define limiter contract ([44ea35c](https://github.com/Davidmuthee12/EazyMarket-backend/commit/44ea35cfb9a402ee763e6065cab821e8f7f8b6f2))
+* **store:** add pagination query parser ([1d2e867](https://github.com/Davidmuthee12/EazyMarket-backend/commit/1d2e867ce5db4f33cb4714238e5ed187a1871b9c))
+* **users:** activate storefronts on vendor approval ([9ad55f3](https://github.com/Davidmuthee12/EazyMarket-backend/commit/9ad55f3af9375bb26d5085a707b7cc28f948c683))
+* **users:** collect storefront details for vendor applications ([ac2d01b](https://github.com/Davidmuthee12/EazyMarket-backend/commit/ac2d01b7439e63d70b9754e75f0e96da0e1c0e4a))
+
+
+### Bug Fixes
+
+* **vendor:** map duplicate profile errors ([f8eb6ae](https://github.com/Davidmuthee12/EazyMarket-backend/commit/f8eb6aefe1772a228ef440e594f4a5228b08b271))
+* **vendor:** normalize profile subdomains ([0113d18](https://github.com/Davidmuthee12/EazyMarket-backend/commit/0113d1839fa149753c9196e89fd77c13122e1d21))
+
 ## [1.7.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.6.0...v1.7.0) (2026-05-13)
 
 
