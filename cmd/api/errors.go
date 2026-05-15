@@ -57,7 +57,6 @@ func (app *application) unauthorizedBasicErrorResponse(w http.ResponseWriter, r 
 	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 }
 
-//lint:ignore U1000 reserved for future route handlers
 func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request, retryAfter string) {
 	app.logger.Warnw("rate limit exceeded", "method", r.Method, "path", r.URL.Path)
 
