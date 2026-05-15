@@ -8,11 +8,11 @@ import (
 
 type UpdateVendorProfile struct {
 	Storename      string `json:"storename" validate:"required,max=150"`
-	Subdomain      string `json:"subdomain" validate:"required,max=100"`
+	Subdomain      string `json:"subdomain" validate:"required,max=63"`
 	Description    string `json:"description" validate:"required,max=250"`
 	Logo_URL       string `json:"logo_url" validate:"omitempty,max=100"`
 	Banner_URL     string `json:"banner_url" validate:"omitempty,max=100"`
-	Business_Email string `json:"business_email" validate:"omitempty,max=255"`
+	Business_Email string `json:"business_email" validate:"omitempty,email,max=255"`
 	Business_Phone string `json:"business_phone" validate:"omitempty,max=20"`
 	Address        string `json:"address" validate:"omitempty,max=100"`
 }
@@ -43,11 +43,17 @@ func (app *application) vendorProfileHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	subdomain, err := normalizeSubdomain(Payload.Subdomain)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
 	user := getUserFromCtx(r)
 
 	vendor := &store.Vendor{
 		Storename:      Payload.Storename,
-		Subdomain:      Payload.Subdomain,
+		Subdomain:      subdomain,
 		Description:    Payload.Description,
 		Logo_URL:       Payload.Logo_URL,
 		Banner_URL:     Payload.Banner_URL,
@@ -59,7 +65,7 @@ func (app *application) vendorProfileHandler(w http.ResponseWriter, r *http.Requ
 	ctx := r.Context()
 
 	// store the vendor profile
-	err := app.store.Vendor.CreateVendorProfile(ctx, vendor, user.UUID)
+	err = app.store.Vendor.CreateVendorProfile(ctx, vendor, user.UUID)
 	if err != nil {
 		switch err {
 		case store.ErrDuplicateStoreName:
@@ -68,6 +74,8 @@ func (app *application) vendorProfileHandler(w http.ResponseWriter, r *http.Requ
 			app.badRequestResponse(w, r, err)
 		case store.ErrDuplicateBusinessEmail:
 			app.badRequestResponse(w, r, err)
+		case store.ErrVendorProfileExists:
+			app.conflictResponse(w, r, err)
 		default:
 			app.internalServerError(w, r, err)
 		}
