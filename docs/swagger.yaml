@@ -15,6 +15,28 @@ definitions:
     - name
     - slug
     type: object
+  main.AnalyticsEventPayload:
+    properties:
+      event_type:
+        enum:
+        - storefront_view
+        - product_view
+        - add_to_cart
+        - wishlist_add
+        - checkout_started
+        - order_created
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      product_id:
+        type: string
+      session_id:
+        maxLength: 255
+        type: string
+    required:
+    - event_type
+    type: object
   main.CartItemPayload:
     properties:
       product_id:
@@ -211,6 +233,107 @@ definitions:
     - storename
     - subdomain
     type: object
+  store.AdminAnalyticsSummary:
+    properties:
+      add_to_cart_events:
+        type: integer
+      approved_vendors:
+        type: integer
+      average_order_value:
+        type: number
+      cancelled_orders:
+        type: integer
+      confirmed_orders:
+        type: integer
+      customers_count:
+        type: integer
+      delivered_orders:
+        type: integer
+      gross_revenue:
+        type: number
+      orders_count:
+        type: integer
+      pending_orders:
+        type: integer
+      pending_vendor_applications:
+        type: integer
+      platform_commission:
+        type: number
+      product_views:
+        type: integer
+      products_sold:
+        type: integer
+      shipped_orders:
+        type: integer
+      storefront_views:
+        type: integer
+      suspended_vendors:
+        type: integer
+      total_customers:
+        type: integer
+      total_users:
+        type: integer
+      total_vendors:
+        type: integer
+      vendor_payout:
+        type: number
+      wishlist_add_events:
+        type: integer
+    type: object
+  store.AnalyticsEvent:
+    properties:
+      created_at:
+        type: string
+      event_type:
+        type: string
+      id:
+        type: string
+      metadata:
+        type: object
+      product_id:
+        type: string
+      session_id:
+        type: string
+      user_id:
+        type: string
+      vendor_id:
+        type: string
+    type: object
+  store.AnalyticsSummary:
+    properties:
+      add_to_cart_events:
+        type: integer
+      average_order_value:
+        type: number
+      cancelled_orders:
+        type: integer
+      confirmed_orders:
+        type: integer
+      customers_count:
+        type: integer
+      delivered_orders:
+        type: integer
+      gross_revenue:
+        type: number
+      orders_count:
+        type: integer
+      pending_orders:
+        type: integer
+      platform_commission:
+        type: number
+      product_views:
+        type: integer
+      products_sold:
+        type: integer
+      shipped_orders:
+        type: integer
+      storefront_views:
+        type: integer
+      vendor_payout:
+        type: number
+      wishlist_add_events:
+        type: integer
+    type: object
   store.Cart:
     properties:
       created_at:
@@ -265,6 +388,13 @@ definitions:
         type: string
       slug:
         type: string
+    type: object
+  store.CustomerAnalytics:
+    properties:
+      repeat_customers:
+        type: integer
+      total_customers:
+        type: integer
     type: object
   store.Order:
     properties:
@@ -341,6 +471,19 @@ definitions:
       weight:
         type: number
     type: object
+  store.RevenuePoint:
+    properties:
+      gross_revenue:
+        type: number
+      orders_count:
+        type: integer
+      period:
+        type: string
+      platform_commission:
+        type: number
+      vendor_payout:
+        type: number
+    type: object
   store.Role:
     properties:
       description:
@@ -351,6 +494,49 @@ definitions:
         type: string
       role_id:
         type: integer
+    type: object
+  store.StatusCount:
+    properties:
+      count:
+        type: integer
+      status:
+        type: string
+    type: object
+  store.TopProductAnalytics:
+    properties:
+      add_to_cart:
+        type: integer
+      gross_revenue:
+        type: number
+      name:
+        type: string
+      product_id:
+        type: string
+      product_views:
+        type: integer
+      quantity_sold:
+        type: integer
+      slug:
+        type: string
+      wishlist_adds:
+        type: integer
+    type: object
+  store.TopVendorAnalytics:
+    properties:
+      gross_revenue:
+        type: number
+      orders_count:
+        type: integer
+      products_sold:
+        type: integer
+      store_name:
+        type: string
+      subdomain:
+        type: string
+      vendor_id:
+        type: string
+      vendor_payout:
+        type: number
     type: object
   store.User:
     properties:
@@ -374,6 +560,21 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  store.UserAnalytics:
+    properties:
+      active_users:
+        type: integer
+      admins:
+        type: integer
+      customers:
+        type: integer
+      suspended_users:
+        type: integer
+      total_users:
+        type: integer
+      vendors:
+        type: integer
     type: object
   store.Vendor:
     properties:
@@ -400,6 +601,15 @@ definitions:
       user_id:
         type: string
     type: object
+  store.VendorApplicationAnalytics:
+    properties:
+      approved:
+        type: integer
+      pending:
+        type: integer
+      rejected:
+        type: integer
+    type: object
   store.Wishlist:
     properties:
       created_at:
@@ -423,6 +633,237 @@ info:
   termsOfService: http://swagger.io/terms/
   title: EazyMarket APP API
 paths:
+  /admin/analytics/orders/status:
+    get:
+      description: Retrieves platform-wide order counts by status.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/store.StatusCount'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin order status analytics
+      tags:
+      - admin analytics
+  /admin/analytics/products/top:
+    get:
+      description: Retrieves platform-wide top products by sales and behavior events.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      - description: Maximum number of products, capped at 100
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/store.TopProductAnalytics'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin top products
+      tags:
+      - admin analytics
+  /admin/analytics/revenue:
+    get:
+      description: Retrieves platform revenue over time grouped by day, week, or month.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      - description: 'Grouping interval: day, week, or month'
+        in: query
+        name: interval
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/store.RevenuePoint'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin revenue analytics
+      tags:
+      - admin analytics
+  /admin/analytics/summary:
+    get:
+      description: Retrieves platform-wide revenue, order, user, vendor, and behavior
+        metrics.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.AdminAnalyticsSummary'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin analytics summary
+      tags:
+      - admin analytics
+  /admin/analytics/users:
+    get:
+      description: Retrieves platform user counts by status and role.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.UserAnalytics'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin user analytics
+      tags:
+      - admin analytics
+  /admin/analytics/vendor-applications:
+    get:
+      description: Retrieves vendor application counts by status.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.VendorApplicationAnalytics'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin vendor application analytics
+      tags:
+      - admin analytics
+  /admin/analytics/vendors/top:
+    get:
+      description: Retrieves top vendors by revenue and order volume.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      - description: Maximum number of vendors, capped at 100
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/store.TopVendorAnalytics'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin top vendors
+      tags:
+      - admin analytics
   /admin/categories:
     get:
       description: Retrieves all product categories
@@ -1085,6 +1526,47 @@ paths:
       summary: Get storefront profile
       tags:
       - storefront
+  /storefront/analytics/events:
+    post:
+      consumes:
+      - application/json
+      description: Records a storefront behavior event for the resolved vendor storefront.
+        For local/dev clients, pass the vendor subdomain using X-Store-Subdomain or
+        the store query parameter.
+      parameters:
+      - description: Vendor subdomain used when the request host is not a vendor subdomain
+        in: header
+        name: X-Store-Subdomain
+        type: string
+      - description: Vendor subdomain fallback for local/dev clients
+        in: query
+        name: store
+        type: string
+      - description: Analytics event payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.AnalyticsEventPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Analytics event tracked
+          schema:
+            $ref: '#/definitions/store.AnalyticsEvent'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Track storefront analytics event
+      tags:
+      - storefront analytics
   /storefront/products:
     get:
       description: Retrieves published products for the approved vendor storefront
@@ -1282,6 +1764,172 @@ paths:
       summary: Activates/Register a user
       tags:
       - users
+  /vendor/analytics/customers:
+    get:
+      description: Retrieves total and repeat customer counts for the authenticated
+        vendor.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.CustomerAnalytics'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get vendor customer analytics
+      tags:
+      - vendor analytics
+  /vendor/analytics/orders/status:
+    get:
+      description: Retrieves order counts by status for the authenticated vendor.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/store.StatusCount'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get vendor order status analytics
+      tags:
+      - vendor analytics
+  /vendor/analytics/products/top:
+    get:
+      description: Retrieves top vendor products by sales and behavior events.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      - description: Maximum number of products, capped at 100
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/store.TopProductAnalytics'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get vendor top products
+      tags:
+      - vendor analytics
+  /vendor/analytics/revenue:
+    get:
+      description: Retrieves vendor revenue over time grouped by day, week, or month.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      - description: 'Grouping interval: day, week, or month'
+        in: query
+        name: interval
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/store.RevenuePoint'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get vendor revenue analytics
+      tags:
+      - vendor analytics
+  /vendor/analytics/summary:
+    get:
+      description: Retrieves revenue, order, customer, and behavior metrics for the
+        authenticated vendor.
+      parameters:
+      - description: Start datetime in RFC3339 format
+        in: query
+        name: from
+        type: string
+      - description: End datetime in RFC3339 format
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.AnalyticsSummary'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get vendor analytics summary
+      tags:
+      - vendor analytics
   /vendor/orders:
     get:
       description: Retrieves orders containing products owned by the authenticated

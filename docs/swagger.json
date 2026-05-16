@@ -16,6 +16,365 @@
     },
     "basePath": "/v1",
     "paths": {
+        "/admin/analytics/orders/status": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves platform-wide order counts by status.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin analytics"
+                ],
+                "summary": "Get admin order status analytics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/store.StatusCount"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/admin/analytics/products/top": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves platform-wide top products by sales and behavior events.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin analytics"
+                ],
+                "summary": "Get admin top products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum number of products, capped at 100",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/store.TopProductAnalytics"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/admin/analytics/revenue": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves platform revenue over time grouped by day, week, or month.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin analytics"
+                ],
+                "summary": "Get admin revenue analytics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Grouping interval: day, week, or month",
+                        "name": "interval",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/store.RevenuePoint"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/admin/analytics/summary": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves platform-wide revenue, order, user, vendor, and behavior metrics.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin analytics"
+                ],
+                "summary": "Get admin analytics summary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/store.AdminAnalyticsSummary"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/admin/analytics/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves platform user counts by status and role.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin analytics"
+                ],
+                "summary": "Get admin user analytics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/store.UserAnalytics"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/admin/analytics/vendor-applications": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves vendor application counts by status.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin analytics"
+                ],
+                "summary": "Get admin vendor application analytics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/store.VendorApplicationAnalytics"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/admin/analytics/vendors/top": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves top vendors by revenue and order volume.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin analytics"
+                ],
+                "summary": "Get admin top vendors",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum number of vendors, capped at 100",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/store.TopVendorAnalytics"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/admin/categories": {
             "get": {
                 "security": [
@@ -1014,6 +1373,64 @@
                 }
             }
         },
+        "/storefront/analytics/events": {
+            "post": {
+                "description": "Records a storefront behavior event for the resolved vendor storefront. For local/dev clients, pass the vendor subdomain using X-Store-Subdomain or the store query parameter.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefront analytics"
+                ],
+                "summary": "Track storefront analytics event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain used when the request host is not a vendor subdomain",
+                        "name": "X-Store-Subdomain",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Vendor subdomain fallback for local/dev clients",
+                        "name": "store",
+                        "in": "query"
+                    },
+                    {
+                        "description": "Analytics event payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.AnalyticsEventPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Analytics event tracked",
+                        "schema": {
+                            "$ref": "#/definitions/store.AnalyticsEvent"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/storefront/products": {
             "get": {
                 "description": "Retrieves published products for the approved vendor storefront resolved from the request subdomain. For local/dev clients, pass the vendor subdomain using X-Store-Subdomain or the store query parameter.",
@@ -1296,6 +1713,262 @@
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/vendor/analytics/customers": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves total and repeat customer counts for the authenticated vendor.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vendor analytics"
+                ],
+                "summary": "Get vendor customer analytics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/store.CustomerAnalytics"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/vendor/analytics/orders/status": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves order counts by status for the authenticated vendor.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vendor analytics"
+                ],
+                "summary": "Get vendor order status analytics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/store.StatusCount"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/vendor/analytics/products/top": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves top vendor products by sales and behavior events.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vendor analytics"
+                ],
+                "summary": "Get vendor top products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum number of products, capped at 100",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/store.TopProductAnalytics"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/vendor/analytics/revenue": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves vendor revenue over time grouped by day, week, or month.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vendor analytics"
+                ],
+                "summary": "Get vendor revenue analytics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Grouping interval: day, week, or month",
+                        "name": "interval",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/store.RevenuePoint"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/vendor/analytics/summary": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves revenue, order, customer, and behavior metrics for the authenticated vendor.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vendor analytics"
+                ],
+                "summary": "Get vendor analytics summary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start datetime in RFC3339 format",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End datetime in RFC3339 format",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/store.AnalyticsSummary"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {}
                     },
                     "500": {
@@ -1993,6 +2666,36 @@
                 }
             }
         },
+        "main.AnalyticsEventPayload": {
+            "type": "object",
+            "required": [
+                "event_type"
+            ],
+            "properties": {
+                "event_type": {
+                    "type": "string",
+                    "enum": [
+                        "storefront_view",
+                        "product_view",
+                        "add_to_cart",
+                        "wishlist_add",
+                        "checkout_started",
+                        "order_created"
+                    ]
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "session_id": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
         "main.CartItemPayload": {
             "type": "object",
             "required": [
@@ -2267,6 +2970,159 @@
                 }
             }
         },
+        "store.AdminAnalyticsSummary": {
+            "type": "object",
+            "properties": {
+                "add_to_cart_events": {
+                    "type": "integer"
+                },
+                "approved_vendors": {
+                    "type": "integer"
+                },
+                "average_order_value": {
+                    "type": "number"
+                },
+                "cancelled_orders": {
+                    "type": "integer"
+                },
+                "confirmed_orders": {
+                    "type": "integer"
+                },
+                "customers_count": {
+                    "type": "integer"
+                },
+                "delivered_orders": {
+                    "type": "integer"
+                },
+                "gross_revenue": {
+                    "type": "number"
+                },
+                "orders_count": {
+                    "type": "integer"
+                },
+                "pending_orders": {
+                    "type": "integer"
+                },
+                "pending_vendor_applications": {
+                    "type": "integer"
+                },
+                "platform_commission": {
+                    "type": "number"
+                },
+                "product_views": {
+                    "type": "integer"
+                },
+                "products_sold": {
+                    "type": "integer"
+                },
+                "shipped_orders": {
+                    "type": "integer"
+                },
+                "storefront_views": {
+                    "type": "integer"
+                },
+                "suspended_vendors": {
+                    "type": "integer"
+                },
+                "total_customers": {
+                    "type": "integer"
+                },
+                "total_users": {
+                    "type": "integer"
+                },
+                "total_vendors": {
+                    "type": "integer"
+                },
+                "vendor_payout": {
+                    "type": "number"
+                },
+                "wishlist_add_events": {
+                    "type": "integer"
+                }
+            }
+        },
+        "store.AnalyticsEvent": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object"
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "session_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "vendor_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "store.AnalyticsSummary": {
+            "type": "object",
+            "properties": {
+                "add_to_cart_events": {
+                    "type": "integer"
+                },
+                "average_order_value": {
+                    "type": "number"
+                },
+                "cancelled_orders": {
+                    "type": "integer"
+                },
+                "confirmed_orders": {
+                    "type": "integer"
+                },
+                "customers_count": {
+                    "type": "integer"
+                },
+                "delivered_orders": {
+                    "type": "integer"
+                },
+                "gross_revenue": {
+                    "type": "number"
+                },
+                "orders_count": {
+                    "type": "integer"
+                },
+                "pending_orders": {
+                    "type": "integer"
+                },
+                "platform_commission": {
+                    "type": "number"
+                },
+                "product_views": {
+                    "type": "integer"
+                },
+                "products_sold": {
+                    "type": "integer"
+                },
+                "shipped_orders": {
+                    "type": "integer"
+                },
+                "storefront_views": {
+                    "type": "integer"
+                },
+                "vendor_payout": {
+                    "type": "number"
+                },
+                "wishlist_add_events": {
+                    "type": "integer"
+                }
+            }
+        },
         "store.Cart": {
             "type": "object",
             "properties": {
@@ -2348,6 +3204,17 @@
                 },
                 "slug": {
                     "type": "string"
+                }
+            }
+        },
+        "store.CustomerAnalytics": {
+            "type": "object",
+            "properties": {
+                "repeat_customers": {
+                    "type": "integer"
+                },
+                "total_customers": {
+                    "type": "integer"
                 }
             }
         },
@@ -2465,6 +3332,26 @@
                 }
             }
         },
+        "store.RevenuePoint": {
+            "type": "object",
+            "properties": {
+                "gross_revenue": {
+                    "type": "number"
+                },
+                "orders_count": {
+                    "type": "integer"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "platform_commission": {
+                    "type": "number"
+                },
+                "vendor_payout": {
+                    "type": "number"
+                }
+            }
+        },
         "store.Role": {
             "type": "object",
             "properties": {
@@ -2479,6 +3366,72 @@
                 },
                 "role_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "store.StatusCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "store.TopProductAnalytics": {
+            "type": "object",
+            "properties": {
+                "add_to_cart": {
+                    "type": "integer"
+                },
+                "gross_revenue": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "product_views": {
+                    "type": "integer"
+                },
+                "quantity_sold": {
+                    "type": "integer"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "wishlist_adds": {
+                    "type": "integer"
+                }
+            }
+        },
+        "store.TopVendorAnalytics": {
+            "type": "object",
+            "properties": {
+                "gross_revenue": {
+                    "type": "number"
+                },
+                "orders_count": {
+                    "type": "integer"
+                },
+                "products_sold": {
+                    "type": "integer"
+                },
+                "store_name": {
+                    "type": "string"
+                },
+                "subdomain": {
+                    "type": "string"
+                },
+                "vendor_id": {
+                    "type": "string"
+                },
+                "vendor_payout": {
+                    "type": "number"
                 }
             }
         },
@@ -2517,6 +3470,29 @@
                 }
             }
         },
+        "store.UserAnalytics": {
+            "type": "object",
+            "properties": {
+                "active_users": {
+                    "type": "integer"
+                },
+                "admins": {
+                    "type": "integer"
+                },
+                "customers": {
+                    "type": "integer"
+                },
+                "suspended_users": {
+                    "type": "integer"
+                },
+                "total_users": {
+                    "type": "integer"
+                },
+                "vendors": {
+                    "type": "integer"
+                }
+            }
+        },
         "store.Vendor": {
             "type": "object",
             "properties": {
@@ -2552,6 +3528,20 @@
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "store.VendorApplicationAnalytics": {
+            "type": "object",
+            "properties": {
+                "approved": {
+                    "type": "integer"
+                },
+                "pending": {
+                    "type": "integer"
+                },
+                "rejected": {
+                    "type": "integer"
                 }
             }
         },
