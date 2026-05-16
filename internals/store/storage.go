@@ -83,18 +83,32 @@ type Storage struct {
 		GetWishlistByID(ctx context.Context, userUUID, vendorID, productID string) (*Wishlist, error)
 		DeleteFromWishlist(ctx context.Context, userUUID, vendorID, productID string) error
 	}
+
+	Analytics interface {
+		TrackEvent(ctx context.Context, event *AnalyticsEvent) error
+		GetVendorSummary(ctx context.Context, vendorID string, from, to *time.Time) (*AnalyticsSummary, error)
+		GetAdminSummary(ctx context.Context, from, to *time.Time) (*AdminAnalyticsSummary, error)
+		GetRevenue(ctx context.Context, vendorID string, from, to *time.Time, interval string) ([]RevenuePoint, error)
+		GetTopProducts(ctx context.Context, vendorID string, from, to *time.Time, limit int) ([]TopProductAnalytics, error)
+		GetOrderStatus(ctx context.Context, vendorID string, from, to *time.Time) ([]StatusCount, error)
+		GetCustomerAnalytics(ctx context.Context, vendorID string, from, to *time.Time) (*CustomerAnalytics, error)
+		GetTopVendors(ctx context.Context, from, to *time.Time, limit int) ([]TopVendorAnalytics, error)
+		GetUserAnalytics(ctx context.Context, from, to *time.Time) (*UserAnalytics, error)
+		GetVendorApplicationAnalytics(ctx context.Context, from, to *time.Time) (*VendorApplicationAnalytics, error)
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Users:    &UserStore{db},
-		Roles:    &RoleStore{db},
-		Vendor:   &VenderStore{db},
-		Category: &CategoryStore{db},
-		Product:  &ProductStore{db},
-		Cart:     &CartStore{db},
-		Order:    &OrderStore{db},
-		Wishlist: &WishlistStore{db},
+		Users:     &UserStore{db},
+		Roles:     &RoleStore{db},
+		Vendor:    &VenderStore{db},
+		Category:  &CategoryStore{db},
+		Product:   &ProductStore{db},
+		Cart:      &CartStore{db},
+		Order:     &OrderStore{db},
+		Wishlist:  &WishlistStore{db},
+		Analytics: &AnalyticsStore{db},
 	}
 }
 
