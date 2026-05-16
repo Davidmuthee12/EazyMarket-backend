@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.8.0...v1.9.0) (2026-05-16)
+
+
+### Features
+
+* **analytics:** add analytics handlers ([455b73d](https://github.com/Davidmuthee12/EazyMarket-backend/commit/455b73d97a8143b2685853c877b6938506b0d7a3))
+* **analytics:** add analytics storage queries ([a0500f0](https://github.com/Davidmuthee12/EazyMarket-backend/commit/a0500f0c7568c483ab8b181389826fd9c470e225))
+* **api:** mount analytics routes ([8f655b3](https://github.com/Davidmuthee12/EazyMarket-backend/commit/8f655b314ca3fc94d39dcf883201053abfae5641))
+* **db:** create analytics events table ([456bb1d](https://github.com/Davidmuthee12/EazyMarket-backend/commit/456bb1d98de9350607c78a3431782f4f695bf4d1))
+
 ## [1.8.0](https://github.com/Davidmuthee12/EazyMarket-backend/compare/v1.7.0...v1.8.0) (2026-05-15)
 
 
