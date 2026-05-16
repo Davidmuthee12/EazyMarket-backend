@@ -145,6 +145,13 @@ func (app *application) mount() http.Handler {
 			r.Get("/vendor-request", app.vendorRequestHandler)
 			r.Put("/vendor-request/{userUUID}/approve", app.approveVendorHandler)
 			r.Put("/vendor-request/{userUUID}/reject", app.rejectVendorHandler)
+			r.Get("/analytics/summary", app.getAdminAnalyticsSummaryHandler)
+			r.Get("/analytics/revenue", app.getAdminAnalyticsRevenueHandler)
+			r.Get("/analytics/vendors/top", app.getAdminTopVendorsHandler)
+			r.Get("/analytics/products/top", app.getAdminTopProductsHandler)
+			r.Get("/analytics/orders/status", app.getAdminOrderStatusAnalyticsHandler)
+			r.Get("/analytics/users", app.getAdminUserAnalyticsHandler)
+			r.Get("/analytics/vendor-applications", app.getAdminVendorApplicationAnalyticsHandler)
 			r.Post("/categories", app.addCategoriesHandler)
 			r.Get("/categories", app.getCategoriesHandler)
 			r.Delete("/categories/{id}", app.deleteCategoryHandler)
@@ -167,6 +174,11 @@ func (app *application) mount() http.Handler {
 				r.Get("/orders", app.getVendorOrdersHandler)
 				r.Get("/orders/{orderID}", app.getVendorOrderByIDHandler)
 				r.Put("/orders/{orderID}/status", app.updateVendorOrderStatusHandler)
+				r.Get("/analytics/summary", app.getVendorAnalyticsSummaryHandler)
+				r.Get("/analytics/revenue", app.getVendorAnalyticsRevenueHandler)
+				r.Get("/analytics/products/top", app.getVendorTopProductsHandler)
+				r.Get("/analytics/orders/status", app.getVendorOrderStatusAnalyticsHandler)
+				r.Get("/analytics/customers", app.getVendorCustomerAnalyticsHandler)
 			})
 		})
 
@@ -175,6 +187,7 @@ func (app *application) mount() http.Handler {
 			r.Get("/", app.getStorefrontHandler)
 			r.Get("/products", app.getStorefrontProductsHandler)
 			r.Get("/products/{slug}", app.getStorefrontProductBySlugHandler)
+			r.Post("/analytics/events", app.trackStorefrontAnalyticsEventHandler)
 		})
 
 		r.Route("/cart", func(r chi.Router) {
